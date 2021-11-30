@@ -6,14 +6,7 @@ This should debatably go in types.py (probably not though).
 import csv
 import datetime
 
-from records import *
-
-
-def parse_iso_date(date: str) -> datetime.date:
-    """TODO
-    """
-    year, month, day = [int(x) for x in date.split('-')]
-    return datetime.date(year, month, day)
+from records import CovidRecord, StockRecord
 
 
 def parse_stock_record(row: list[str], stock_name: str) -> StockRecord:
@@ -21,7 +14,7 @@ def parse_stock_record(row: list[str], stock_name: str) -> StockRecord:
     """
     return StockRecord(
         stock=stock_name,
-        date=parse_iso_date(row[0]),
+        date=datetime.date.fromisoformat(row[0]),
         open=float(row[1]),
         high=float(row[2]),
         low=float(row[3]),
@@ -44,7 +37,7 @@ def parse_covid_record(row: list[str]) -> CovidRecord:
     """
     return CovidRecord(
         country=row[0],
-        date=parse_iso_date(row[1]),
+        date=datetime.date.fromisoformat(row[1]),
         new_cases=int(row[2])
     )
 
