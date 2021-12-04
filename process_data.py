@@ -3,96 +3,86 @@ The main data processing goes here (for now).
 """
 import datetime
 
-from records import CovidRecord, StockRecord
+from parse_data import parse_covid_data_file, parse_stock_data_file
 
 
-def differentiate_stock_data(data: list[StockRecord]) -> list[StockRecord]:
+class DataManager:
+    """TODO
+    """
+    _covid: dict[str, list[int]]
+    _open: dict[str, list[float]]
+    _high: dict[str, list[float]]
+    _low: dict[str, list[float]]
+    _close: dict[str, list[float]]
+    _start: datetime.date
+    _end: datetime.date
+    _duration: int
+
+    def __init__(self, sources: set[str], start: datetime.date, end: datetime.date) -> None:
+        """Load the data from the files in sources, only from start to end inclusive.
+
+        Note that we do not explicitly store the date from here on out. It is expected that the
+        date in self._<whatever>[i] = start + datetime.timedelta(days=i).
+
+        Preconditions:
+            - sources != set()
+            - start < end
+        """
+        self._duration = (end - start).days + 1
+
+        self._covid = {}
+        self._open = {}
+        self._high = {}
+        self._low = {}
+        self._close = {}
+
+        for source in sources:
+            name = source[11:-4]
+
+            if 'covid-' in source:
+                self._covid[name] = parse_covid_data_file(source, start, end)
+
+                assert len(self._covid[name]) == self._duration
+            elif 'stock-' in source:
+                absolute_data = parse_stock_data_file(source, start - datetime.timedelta(days=1),
+                                                      end)
+                data = tuple(differentiate_stock_data(x) for x in absolute_data)
+                self._open[name] = data[0]
+                self._high[name] = data[1]
+                self._low[name] = data[2]
+                self._close[name] = data[3]
+
+                # assert len(self._open[name]) == self._duration
+                # assert len(self._high[name]) == self._duration
+                # assert len(self._low[name]) == self._duration
+                # assert len(self._close[name]) == self._duration
+                # these assertions don't make sense because of weekends :(
+                # TODO need to actually consider dates, darn
+            else:
+                raise AssertionError('Invalid data type.')
+
+
+def differentiate_stock_data(data: list[float]) -> list[float]:
     """Convert the prices in the stock data from absolute (cost) to relative
     (change in cost from yesterday).
 
-    Note that the length of the output will be one less than the length of the
-    input.
+    Convert the prices in the stock data from absolute (cost) to relative
+    (change in cost from yesterday).
 
     Preconditions:
         - len(data) >= 2
 
-    >>> yesterday = StockRecord('snp500', datetime.date(2021, 1, 1), 1, 1, 1, 1)
-    >>> today = StockRecord('snp500', datetime.date(2021, 1, 2), 1, 0, 2, 1)
-    >>> expected = [StockRecord('snp500', datetime.date(2021, 1, 2), 0, -1, 1, 0)]
-    >>> actual = differentiate_stock_data([yesterday, today])
-    >>> actual == expected
+    >>> import math
+    >>> expected = [-1.0]
+    >>> actual = differentiate_stock_data([1.0, 0.0])
+    >>> all(math.isclose(actual[i], expected[i]) for i in range(len(expected)))
     True
     """
-    relative_data_so_far = []
+    relative_so_far = []
 
     for i in range(1, len(data)):
         yesterday = data[i - 1]
         today = data[i]
-        new_today = StockRecord(
-            stock=today.stock,
-            date=today.date,
-            open=today.open - yesterday.open,
-            high=today.high - yesterday.high,
-            low=today.low - yesterday.low,
-            close=today.close - yesterday.close
-        )
-        relative_data_so_far.append(new_today)
+        relative_so_far.append(today - yesterday)
 
-    return relative_data_so_far
-
-
-def find_stock_spikes(data: list[StockRecord], threshold: float) -> list[tuple[int, str]]:
-    """Find spikes in the stock data, data that exceeds threashold.
-
-    Preconditions:
-        - data != []
-
-    >>> sample = [StockRecord('snp500', datetime.date(2021, 1, 1), 0, 0, 5, 0), \
-                  StockRecord('snp500', datetime.date(2021, 1, 2), 0, 10, 0, 0)]
-    >>> find_stock_spikes(sample, 5.0)
-    [(1, 'high')]
-    """
-    spikes_so_far = []
-
-    for i in range(len(data)):
-        record = data[i]
-        if record.open > threshold:
-            spikes_so_far.append((i, 'open'))
-
-        if record.high > threshold:
-            spikes_so_far.append((i, 'high'))
-
-        if record.low > threshold:
-            spikes_so_far.append((i, 'low'))
-
-        if record.close > threshold:
-            spikes_so_far.append((i, 'close'))
-        # TODO: This seems needlessly repetitive, is this necessary? Can this be done
-        # with metaprogramming?
-
-    return spikes_so_far
-    # Open Questions (TODO):
-    # - does this algorithm make sense?
-    # - should we be returning references rather than indices?
-    # - does which field the data comes from actually matter?
-
-    # Something about how the data source is kept feels funky, should we aggregate the stock data
-    # into a single file for multiple stock providers, or should we maybe split the countries
-    # into separate files.
-
-
-def find_covid_spikes(data: list[CovidRecord], threshold: float) -> list[int]:
-    """Find covid spikes within data.
-
-    Preconditions:
-        - data != []
-
-    >>> sample = [CovidRecord('CAN', datetime.date(2021, 1, 1), 5), \
-                  CovidRecord('CAN', datetime.date(2021, 1, 2), 6),]
-    >>> find_covid_spikes(sample, 5.5)
-    [1]
-    """
-    return [i for i in range(len(data)) if data[i].new_cases > threshold]
-    # TODO
-    # the fact that this one can be done in one line as a comprehensions, but find_stock_spikes
-    # can't is definitely a structural code smell and should be looked into.
+    return relative_so_far
