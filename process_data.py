@@ -24,8 +24,8 @@ class DataManager:
     def __init__(self, sources: set[str], start: datetime.date, end: datetime.date) -> None:
         """Load the data from the files in sources, only from start to end inclusive.
 
-        Note that we do not explicitly store the date from here on out. It is expected that the
-        date in self._<whatever>[i] = start + datetime.timedelta(days=i).
+        Note that we do not explicitly store the date from here on out. It is assumed that the
+        date in self._<whatever>[i] = _index_to_date. TODO remove this note before final submission
 
         Preconditions:
             - sources != set()
@@ -66,6 +66,17 @@ class DataManager:
                 assert len(self._close[name]) == self._duration
             else:
                 raise AssertionError('Invalid data type.')
+
+    def _index_to_date(self, index: int) -> datetime.date:
+        """Convert the index of an element in one of the many lists that this class contains into
+        its canonical date.
+
+        Preconditions:
+            - self.index < self._duration
+
+        >>> # TODO
+        """
+        return self._start + datetime.timedelta(days=index)
 
 
 def differentiate_stock_data(data: list[float]) -> list[float]:
