@@ -6,13 +6,14 @@ import datetime
 
 
 def parse_stock_data_file(filename: str, start: datetime.date, end: datetime.date) -> \
-        tuple[list[float], list[float], list[float], list[float]]:
+        tuple[list[datetime.date], list[float], list[float], list[float], list[float]]:
     """Parse a stock data file, keeping only the dates within start and end inclusive.
     """
     with open(filename, mode='r') as file:
         reader = csv.reader(file)
         next(reader)  # skip the header
 
+        dates_so_far = []
         open_so_far = []
         high_so_far = []
         low_so_far = []
@@ -24,12 +25,13 @@ def parse_stock_data_file(filename: str, start: datetime.date, end: datetime.dat
             if date < start or date > end:  # drop dates that are outside the requested range
                 continue
 
+            dates_so_far.append(date)
             open_so_far.append(float(row[1]))
             high_so_far.append(float(row[2]))
             low_so_far.append(float(row[3]))
             close_so_far.append(float(row[4]))
 
-        return (open_so_far, high_so_far, low_so_far, close_so_far)
+        return (dates_so_far, open_so_far, high_so_far, low_so_far, close_so_far)
 
 
 def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.date) -> list[int]:

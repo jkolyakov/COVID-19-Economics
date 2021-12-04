@@ -37,27 +37,29 @@ class DataManager:
         self._close = {}
 
         for source in sources:
-            name = source[11:-4]
+            name = source[11:-4]  # TODO un-hardcode this number
 
             if 'covid-' in source:
                 self._covid[name] = parse_covid_data_file(source, start, end)
 
                 assert len(self._covid[name]) == self._duration
             elif 'stock-' in source:
-                absolute_data = parse_stock_data_file(source, start - datetime.timedelta(days=1),
-                                                      end)
-                data = tuple(differentiate_stock_data(x) for x in absolute_data)
+                dates, *data = parse_stock_data_file(source, start - datetime.timedelta(days=1), end)
+
+                data = [differentiate_stock_data(x) for x in data]
+                dates.pop(0)  # the above implicitly chops off the first element
+
+                data = [fill_stock_data(dates, x, start, end) for x in data]
+
                 self._open[name] = data[0]
                 self._high[name] = data[1]
                 self._low[name] = data[2]
                 self._close[name] = data[3]
 
-                # assert len(self._open[name]) == self._duration
-                # assert len(self._high[name]) == self._duration
-                # assert len(self._low[name]) == self._duration
-                # assert len(self._close[name]) == self._duration
-                # these assertions don't make sense because of weekends :(
-                # TODO need to actually consider dates, darn
+                assert len(self._open[name]) == self._duration
+                assert len(self._high[name]) == self._duration
+                assert len(self._low[name]) == self._duration
+                assert len(self._close[name]) == self._duration
             else:
                 raise AssertionError('Invalid data type.')
 
@@ -86,3 +88,27 @@ def differentiate_stock_data(data: list[float]) -> list[float]:
         relative_so_far.append(today - yesterday)
 
     return relative_so_far
+
+
+def fill_stock_data(dates: list[datetime.date], data: list[float], start: datetime.date,
+                    end: datetime.date) -> list[float]:
+    """Fill the given data such that the returned list is equal to the number of days between start
+    and end inclusive.  Dates that are not provided in data are assumed to be 0.0 (does not change
+    over the weekend).
+
+    Preconditions:
+        - len(data) == len(dates)
+        - start < end
+
+    >>> fill_stock_data([datetime.date(2021, 1, 2), datetime.date(2021, 1, 4)], \
+                        [1.0, 2.0], datetime.date(2021, 1, 1), datetime.date(2021, 1, 4))
+    [0.0, 1.0, 0.0, 2.0]
+    """
+    assert len(data) == len(dates)
+    filled_data = [0.0] * ((end - start).days + 1)
+
+    for i in range(len(dates)):
+        actual_index = (dates[i] - start).days
+        filled_data[actual_index] = data[i]
+
+    return filled_data
