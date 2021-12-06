@@ -2,7 +2,7 @@
 The main data processing goes here (for now).
 """
 import datetime
-
+import pandas as pd
 from parse_data import parse_covid_data_file, parse_stock_data_file
 
 
@@ -128,5 +128,32 @@ def fill_stock_data(dates: list[datetime.date], data: list[float], start: dateti
 
     return filled_data
 
+
 # TODO is it safe to make the assumption that there are no gaps in the covid data?  Do we need a
 #  fill_covid_data to match fill_stock_data?
+
+def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
+    """Converts data into form that will be accepted by the Panda's library DataFrame class
+
+    Preconditions:
+        - len(covid) == len(stock)
+    >>> convert_data([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
+    [(0.2, 0.3), (0.0, 0.6), (0.6, 0.0), (0.2, 0.1)]
+    """
+    final_data = []
+    for i in range(len(covid)):
+        final_data.append((covid[i], stock[i]))
+    return final_data
+
+
+def return_correlation_coefficient(covid: list[float], stock: list[float]) -> float:
+    """Returns correlation matrix from the data
+    >>> import math
+    >>> c = return_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
+    >>> math.isclose(-0.8510644963469901, c)
+    True
+    """
+    data = convert_data(covid, stock)
+    df = pd.DataFrame(data, columns=['covid', 'stocks'])
+    correlation = df.corr()
+    return correlation['covid']['stocks']
