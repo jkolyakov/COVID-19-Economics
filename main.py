@@ -12,8 +12,8 @@ if __name__ == '__main__':
             'data/covid-usa.csv',
             'data/stock-snp500.csv'
         },
-        start=datetime.date(2021, 1, 1),
-        end=datetime.date(2021, 1, 10)
+        start=datetime.date(2020, 1, 1),
+        end=datetime.date(2021, 1, 1)
     )
     gui = UserInterface(
         data_source=manager

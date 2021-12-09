@@ -2,7 +2,10 @@
 The main data processing goes here (for now).
 """
 import datetime
+from typing import Union
+
 import pandas as pd
+
 from parse_data import parse_covid_data_file, parse_stock_data_file
 
 
@@ -43,7 +46,8 @@ class DataManager:
             name = source[11:-4]  # TODO un-hardcode this number
 
             if 'covid-' in source:
-                self._covid[name] = parse_covid_data_file(source, start, end)
+                dates, data = parse_covid_data_file(source, start, end)
+                self._covid[name] = fill_covid_data(dates, data, start, end)
 
                 assert len(self._covid[name]) == self._duration
             elif 'stock-' in source:
@@ -114,23 +118,53 @@ def fill_stock_data(dates: list[datetime.date], data: list[float], start: dateti
     Preconditions:
         - len(data) == len(dates)
         - start < end
+        - TODO there are way more preconditions
 
     >>> fill_stock_data([datetime.date(2021, 1, 2), datetime.date(2021, 1, 4)], \
                         [1.0, 2.0], datetime.date(2021, 1, 1), datetime.date(2021, 1, 4))
     [0.0, 1.0, 0.0, 2.0]
     """
-    assert len(data) == len(dates)
     filled_data = [0.0] * ((end - start).days + 1)
-
-    for i in range(len(dates)):
-        actual_index = (dates[i] - start).days
-        filled_data[actual_index] = data[i]
-
+    fill_data(dates, data, filled_data, start)
     return filled_data
 
 
-# TODO is it safe to make the assumption that there are no gaps in the covid data?  Do we need a
-#  fill_covid_data to match fill_stock_data?
+def fill_covid_data(dates: list[datetime.date], data: list[int], start: datetime.date,
+                    end: datetime.date) -> list[int]:
+    """Fill the given data such that the returned list is equal to the number of days between start
+    and end inclusive.  Dates that are not provided in data are assumed to be 0 (this does mean
+    that we conflate no data with 0 new cases, which is ok for our purposes).
+
+    Preconditions:
+        - len(data) == len(dates)
+        - start < end
+        - TODO there are way more preconditions
+
+    >>> fill_covid_data([datetime.date(2021, 1, 2), datetime.date(2021, 1, 4)], \
+                        [1, 2], datetime.date(2021, 1, 1), datetime.date(2021, 1, 4))
+    [0, 1, 0, 2]
+    """
+    filled_data = [0] * ((end - start).days + 1)
+    fill_data(dates, data, filled_data, start,)
+    return filled_data
+
+
+def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
+              base: list[Union[int, float]], start: datetime.date) -> None:
+    """Backend function for fill_covid_data and fill_stock_data.  Actually performs the copy in a
+    type agnostic way.
+
+    Preconditions:
+        - len(data) == len(dates)
+        - start < end
+        - TODO there are way more preconditions
+
+    >>> # TODO
+    """
+    for i in range(len(dates)):
+        actual_index = (dates[i] - start).days
+        base[actual_index] = data[i]
+
 
 def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
     """Converts data into form that will be accepted by the Panda's library DataFrame class

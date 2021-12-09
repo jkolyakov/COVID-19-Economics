@@ -34,7 +34,8 @@ def parse_stock_data_file(filename: str, start: datetime.date, end: datetime.dat
         return (dates_so_far, open_so_far, high_so_far, low_so_far, close_so_far)
 
 
-def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.date) -> list[int]:
+def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.date) \
+        -> tuple[list[datetime.date], list[int]]:
     """Parse a covid data file, keeping only the dates within start and end inclusive.
     """
     with open(filename, mode='r') as file:
@@ -42,6 +43,7 @@ def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.dat
         next(reader)  # skip the header
 
         cases_so_far = []
+        dates_so_far = []
 
         for row in reader:
             date = datetime.date.fromisoformat(row[0])
@@ -49,6 +51,7 @@ def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.dat
             if date < start or date > end:  # drop dates that are outside the requested range
                 continue
 
+            dates_so_far.append(date)
             cases_so_far.append(int(row[1]))
 
-        return cases_so_far
+        return (dates_so_far, cases_so_far)
