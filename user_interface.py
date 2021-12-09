@@ -60,7 +60,3 @@ class UserInterface:
         """TODO delete this
         """
         return 'Output: {}'.format(input_value)
-
-
-if __name__ == '__main__':
-    UserInterface(None).run()
