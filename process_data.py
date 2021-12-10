@@ -82,6 +82,16 @@ class DataManager:
         """
         return self._start + datetime.timedelta(days=index)
 
+    def get_global_statistics(self) -> list[float]:
+        """TODO: what parameters should this interface take?
+        """
+        pass
+
+    def get_local_statistics(self) -> list[float]:
+        """TODO: what parameters should this interface take?
+        """
+        pass
+
 
 def differentiate_stock_data(data: list[float]) -> list[float]:
     """Convert the prices in the stock data from absolute (cost) to relative
@@ -182,7 +192,8 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
     return spikes
 
 
-def matching_spikes(covid: list[float], stock: list[float], threshold: int) -> list[list[int], list[int]]:
+def matching_spikes(covid: list[float], stock: list[float], threshold: int) \
+        -> list[list[int], list[int]]:
     """Matching the day of the first time covid broke the threshold with the first day of
     the first stock spike. Will return list with the covid spike indices lined up with the
     correlating stock spike indices.
