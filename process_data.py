@@ -82,8 +82,18 @@ class DataManager:
         """
         return self._start + datetime.timedelta(days=index)
 
-    def get_global_statistics(self) -> list[float]:
-        """TODO: what parameters should this interface take?
+    def get_global_statistics(self, stock_stream: str, days: int, stock: str,
+                              country: str) -> list[float]:
+        """Output a list of days correlation coefficients derived from the stock_stream data for
+        stock compared against the covid data of country.
+
+        Preconditions:
+            - stock_stream in {'high', 'low', 'open', 'close'}
+            - days > 0
+            - stock in self._open
+            - country in self._covid
+
+        >>> # TODO
         """
         pass
 
