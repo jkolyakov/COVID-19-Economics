@@ -145,7 +145,7 @@ def fill_covid_data(dates: list[datetime.date], data: list[int], start: datetime
     [0, 1, 0, 2]
     """
     filled_data = [0] * ((end - start).days + 1)
-    fill_data(dates, data, filled_data, start,)
+    fill_data(dates, data, filled_data, start, )
     return filled_data
 
 
@@ -164,6 +164,41 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
     for i in range(len(dates)):
         actual_index = (dates[i] - start).days
         base[actual_index] = data[i]
+
+
+def is_stock_spike(covid: list[float], day: int) -> bool:
+    """Checks to see if the threshold of what we consider to be a spike (11% change in 3 weeks)
+    has been achieved.
+
+    Compares close price on current day and day 3 weeks from now. If it passes threshold returns
+    true.
+
+    >>> TODO
+
+    """
+    percent_change = (covid[day] - covid[day + 20]) / covid[day]
+    if percent_change >= 0.11:
+        return True
+    else:
+        return False
+
+
+def stock_spike_determiner(covid: list[float]) -> list[float]:
+    """Checks to see what time periods count as spikes in the stock price and returns those
+    indices.
+
+    >>> TODO
+
+    """
+    spikes = set()
+    # loop counter
+    x = 0
+    while x < len(covid):
+        if is_stock_spike(covid, x):
+            for y in range(x, x+21):
+                spikes.add(y)
+        x += 1
+    return list(spikes)
 
 
 def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
