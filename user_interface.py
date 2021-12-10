@@ -60,3 +60,4 @@ class UserInterface:
         """TODO delete this
         """
         return 'Output: {}'.format(input_value)
+

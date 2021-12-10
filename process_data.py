@@ -166,43 +166,42 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
         base[actual_index] = data[i]
 
 
-def is_stock_spike(covid: list[float], day: int) -> bool:
-    """Checks to see if the threshold of what we consider to be a spike (11% change in 3 weeks)
-    has been achieved.
+def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> list[int]:
+    """Checks to see what time periods count as spikes in both stock price and covid numbers
+     and returns those indices with a threshold of 1 day.
 
-    Compares close price on current day and day 3 weeks from now. If it passes threshold returns
-    true.
-
+    Preconditions:
+        - len(stock) == len(covid)
     >>> TODO
 
     """
-    percent_change = (covid[day] - covid[day + 20]) / covid[day]
-    if percent_change >= 0.11:
-        return True
-    else:
-        return False
+    spikes = []
+    for x in range(len(stock) - 1):
+        if abs(stock[x+1]) >= 75 and covid[x] >= threshold:
+            spikes.append(x)
+    return spikes
 
 
-def stock_spike_determiner(covid: list[float]) -> list[float]:
-    """Checks to see what time periods count as spikes in the stock price and returns those
-    indices.
+def matching_spikes(covid: list[float], stock: list[float], threshold: int) -> list[list[int], list[int]]:
+    """Matching the day of the first time covid broke the threshold with the first day of
+    the first stock spike. Will return list with the covid spike indices lined up with the
+    correlating stock spike indices.
+
+    Preconditions:
+        - len(stock) == len(covid)
 
     >>> TODO
-
     """
-    spikes = set()
-    # loop counter
-    x = 0
-    while x < len(covid) - 21:
-        if is_stock_spike(covid, x):
-            for y in range(x, x+21):
-                spikes.add(y)
-        x += 1
-    return list(spikes)
+    final_data = [[], []]
+    spikes = spike_determiner(stock, covid, threshold)
+    for x in spikes:
+        final_data[0][0].append(covid[x])
+        final_data[0][1].append(stock[x + 1])
+    return final_data
 
 
 def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
-    """Converts data into form that will be accepted by the Panda's library DataFrame class
+    """Converts spike data into form that will be accepted by the Panda's library DataFrame class
 
     Preconditions:
         - len(covid) == len(stock)
