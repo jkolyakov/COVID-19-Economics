@@ -193,7 +193,7 @@ def stock_spike_determiner(covid: list[float]) -> list[float]:
     spikes = set()
     # loop counter
     x = 0
-    while x < len(covid):
+    while x < len(covid) - 21:
         if is_stock_spike(covid, x):
             for y in range(x, x+21):
                 spikes.add(y)
