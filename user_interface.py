@@ -6,6 +6,8 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 
+import plotly.express as px
+
 from process_data import DataManager
 
 
@@ -36,28 +38,45 @@ class UserInterface:
 
         # setup the app layout
         self._app.layout = html.Div([
-            html.H6("Change the value in the text box to see callbacks in action!"),
-            html.Div([
-                "Input: ",
-                dcc.Input(id='my-input', value='initial value', type='text')
-            ]),
-            html.Br(),
-            html.Div(id='my-output'),
-        ])  # TODO delete this
+            html.H2('Global Trends'),  # currently just a plot of x^<slider>
+            dcc.Graph(id='global-trends-graph'),
+            dcc.Slider(
+                id='global-trends-slider',
+                min=-5,
+                max=5,
+                step=0.25,
+                marks={
+                    -5: '-5',
+                    -1: '-1',
+                    0: '0',
+                    1: '1',
+                    5: '5'
+                },
+                value=0
+            )
+        ])
 
         # add update methods
         self._app.callback(
-            Output(component_id='my-output', component_property='children'),
-            Input(component_id='my-input', component_property='value')
-        )(self._update_output_div)  # TODO delete this
+            Output(component_id='global-trends-graph', component_property='figure'),
+            [Input(component_id='global-trends-slider', component_property='value')]
+        )(self._update_global_trends)
 
     def run(self) -> None:
         """Start the user interface.
         """
         self._app.run_server(debug=True)
 
-    def _update_output_div(self, input_value: str) -> str:
-        """TODO delete this
-        """
-        return 'Output: {}'.format(input_value)
+    def _update_global_trends(self, threshold: float):
+        """TODO this function currently just outputs an equation
 
+        It mostly acts as a slider test at this point
+        """
+        return px.line(
+            {f'x^{threshold}': [(x / 10) ** threshold for x in range(1, 100)]},
+        )
+
+    def _update_local_trends(self):
+        """TODO
+        """
+        pass
