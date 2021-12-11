@@ -99,6 +99,11 @@ class DataManager:
             - days > 0
             - stock in self._open
             - country in self._covid
+            - all(len(self._covid[x]) > 2 for x in self._covid)
+            - all(len(self._high[x]) > 2 for x in self._high)
+            - all(len(self._low[x]) > 2 for x in self._low)
+            - all(len(self._open[x]) > 2 for x in self._open)
+            - all(len(self._close[x]) > 2 for x in self._close)
 
         >>> # TODO
         """
@@ -215,7 +220,10 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
 
     Preconditions:
         - len(stock) == len(covid)
-    >>> TODO
+    >>> stock = [1, 75, 80, 100, 46]
+    >>> covid = [2000, 1324, 1678, 1232, 1899]
+    >>> spike_determiner(stock, covid, 1500)
+    [0, 2]
 
     """
     spikes = []
@@ -225,7 +233,7 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
     return spikes
 
 
-def matching_spikes(covid: list[float], stock: list[float], threshold: int) \
+def matching_spikes(stock: list[float], covid: list[float], threshold: int) \
         -> list[list[int], list[int]]:
     """Matching the day of the first time covid broke the threshold with the first day of
     the first stock spike. Will return list with the covid spike indices lined up with the
@@ -233,14 +241,19 @@ def matching_spikes(covid: list[float], stock: list[float], threshold: int) \
 
     Preconditions:
         - len(stock) == len(covid)
+        - all(x < len(covid) for x in spikes)
+        - all(x < len(stock) - 1 for x in spikes)
 
-    >>> TODO
+    >>> stock = [1, 75, 80, 100, 46]
+    >>> covid = [2000, 1324, 1678, 1232, 1899]
+    >>> matching_spikes(stock, covid, 1500)
+    [[2000, 1678], [75, 100]]
     """
     final_data = [[], []]
     spikes = spike_determiner(stock, covid, threshold)
     for x in spikes:
-        final_data[0][0].append(covid[x])
-        final_data[0][1].append(stock[x + 1])
+        final_data[0].append(covid[x])
+        final_data[1].append(stock[x + 1])
     return final_data
 
 
