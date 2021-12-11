@@ -10,7 +10,9 @@ from parse_data import parse_covid_data_file, parse_stock_data_file
 
 
 class DataManager:
-    """TODO
+    """Data manager class that will both store and handle processing data from the CSV files
+    into a form that can be used by the Pandas library to calculate a correlation coefficient.
+    TODO: Check if this is OK
 
     >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
                                   datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
@@ -41,6 +43,8 @@ class DataManager:
         self._high = {}
         self._low = {}
         self._close = {}
+        self._start = start
+        self._end = end
 
         for source in sources:
             name = source[11:-4]  # TODO un-hardcode this number
@@ -78,7 +82,10 @@ class DataManager:
         Preconditions:
             - self.index < self._duration
 
-        >>> # TODO
+        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                                  datetime.date(2021, 1, 1), datetime.date(2021, 3, 1))
+        >>> usa_and_snp._index_to_date(5)
+        datetime.date(2021, 1, 6)
         """
         return self._start + datetime.timedelta(days=index)
 
@@ -113,7 +120,7 @@ class DataManager:
                 corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
         return corr_data
 
-    def get_local_statistics(self) -> list[float]:
+    def get_weekly_local_statistics(self, stock_stream: str, stock: str, country: str) -> list[float]:
         """TODO: what parameters should this interface take?
         """
         pass
