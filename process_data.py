@@ -106,6 +106,7 @@ class DataManager:
             - all(len(self._close[x]) > 2 for x in self._close)
 
         >>> # TODO
+        # TODO: check if lack of data causes error
         """
         corr_data = []
         covid_data = self._covid[country][days:]
@@ -125,10 +126,44 @@ class DataManager:
                 corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
         return corr_data
 
-    def get_weekly_local_statistics(self, stock_stream: str, stock: str, country: str) -> list[float]:
-        """TODO: what parameters should this interface take?
+    def get_weekly_local_statistics(self, stock_stream: str, stock: str,
+                                    country: str, threshold: int) -> list[float]:
+        """ Filters the data for matching spikes and returns a list of weekly correlation
+        coefficients.
+
+        Preconditions:
+            - stock_stream in {'high', 'low', 'open', 'close'}
+            - stock in self._open
+            - country in self._covid
+            - all(len(self._covid[x]) > 2 for x in self._covid)
+            - all(len(self._high[x]) > 2 for x in self._high)
+            - all(len(self._low[x]) > 2 for x in self._low)
+            - all(len(self._open[x]) > 2 for x in self._open)
+            - all(len(self._close[x]) > 2 for x in self._close)
+
+        >>> #TODO
         """
-        pass
+        corr_data = []
+        if stock_stream == 'high':
+            spike_data = matching_spikes(self._high[stock], self._covid[country], threshold)
+        elif stock_stream == 'low':
+            spike_data = matching_spikes(self._low[stock], self._covid[country], threshold)
+        elif stock_stream == 'open':
+            spike_data = matching_spikes(self._open[stock], self._covid[country], threshold)
+        else:
+            spike_data = matching_spikes(self._close[stock], self._covid[country], threshold)
+
+        if len(spike_data[0]) >= 7:
+            for x in range(0, len(spike_data) - 6, 7):
+                if x + 7 < len(spike_data):
+                    corr_data.append(return_correlation_coefficient(spike_data[0][x:x + 7],
+                                                                    spike_data[1][x:x + 7]))
+                else:
+                    corr_data.append(return_correlation_coefficient(spike_data[0][x:],
+                                                                    spike_data[1][x:]))
+        else:
+            corr_data.append(return_correlation_coefficient(spike_data[0], spike_data[1]))
+        return corr_data
 
 
 def differentiate_stock_data(data: list[float]) -> list[float]:
