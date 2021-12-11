@@ -67,6 +67,8 @@ class UserInterface:
         """
         self._app.run_server(debug=True)
 
+
+
     def _update_global_trends(self, threshold: float):
         """TODO this function currently just outputs an equation
 

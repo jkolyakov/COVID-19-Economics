@@ -82,9 +82,9 @@ class DataManager:
         """
         return self._start + datetime.timedelta(days=index)
 
-    def get_global_statistics(self, stock_stream: str, days: int, stock: str,
-                              country: str) -> list[float]:
-        """Output a list of days correlation coefficients derived from the stock_stream data for
+    def get_weekly_global_statistics(self, stock_stream: str, days: int, stock: str,
+                                     country: str) -> list[float]:
+        """Output a list of weekly correlation coefficients derived from the stock_stream data for
         stock compared against the covid data of country.
 
         Preconditions:
@@ -95,7 +95,23 @@ class DataManager:
 
         >>> # TODO
         """
-        pass
+        corr_data = []
+        covid_data = self._covid[country][days:]
+        if stock_stream == 'high':
+            stock_data = self._high[stock][:-days]
+        elif stock_stream == 'low':
+            stock_data = self._low[stock][:-days]
+        elif stock_stream == 'open':
+            stock_data = self._open[stock][:-days]
+        else:
+            stock_data = self._close[stock][:-days]
+        for x in range(0, len(covid_data) - 6, 7):
+            if x + 7 < len(covid_data):
+                corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
+                                                                stock_data[x:x + 7]))
+            else:
+                corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
+        return corr_data
 
     def get_local_statistics(self) -> list[float]:
         """TODO: what parameters should this interface take?
@@ -197,7 +213,7 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
     """
     spikes = []
     for x in range(len(stock) - 1):
-        if abs(stock[x+1]) >= 75 and covid[x] >= threshold:
+        if abs(stock[x + 1]) >= 75 and covid[x] >= threshold:
             spikes.append(x)
     return spikes
 
