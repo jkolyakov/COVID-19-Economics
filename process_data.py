@@ -110,6 +110,7 @@ class DataManager:
         """
         corr_data = []
         covid_data = self._covid[country][days:]
+        final_corr: list[float]
         if days != 0:
             if stock_stream == 'high':
                 stock_data = self._high[stock][:-days]
@@ -130,11 +131,14 @@ class DataManager:
                 stock_data = self._close[stock]
         for x in range(0, len(covid_data) - 6, 7):
             if x + 7 < len(covid_data):
+                # breakpoint()
                 corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
                                                                 stock_data[x:x + 7]))
             else:
+                # breakpoint()
                 corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
-        return corr_data
+        final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
+        return final_corr
 
     def get_weekly_local_statistics(self, stock_stream: str, stock: str,
                                     country: str, threshold: int) -> list[float]:
