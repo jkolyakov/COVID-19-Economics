@@ -107,6 +107,7 @@ class DataManager:
 
         >>> # TODO
         # TODO: check if lack of data causes error
+        # FIXME: make this work in the case where days = 0
         """
         corr_data = []
         covid_data = self._covid[country][days:]
@@ -142,6 +143,8 @@ class DataManager:
             - all(len(self._close[x]) > 2 for x in self._close)
 
         >>> #TODO
+        # FIXME this does not work (or i just don't know how to use it), seems to always
+           return and empty array
         """
         corr_data = []
         if stock_stream == 'high':
