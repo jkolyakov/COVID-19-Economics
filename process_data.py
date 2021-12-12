@@ -107,18 +107,27 @@ class DataManager:
 
         >>> # TODO
         # TODO: check if lack of data causes error
-        # FIXME: make this work in the case where days = 0
         """
         corr_data = []
         covid_data = self._covid[country][days:]
-        if stock_stream == 'high':
-            stock_data = self._high[stock][:-days]
-        elif stock_stream == 'low':
-            stock_data = self._low[stock][:-days]
-        elif stock_stream == 'open':
-            stock_data = self._open[stock][:-days]
+        if days != 0:
+            if stock_stream == 'high':
+                stock_data = self._high[stock][:-days]
+            elif stock_stream == 'low':
+                stock_data = self._low[stock][:-days]
+            elif stock_stream == 'open':
+                stock_data = self._open[stock][:-days]
+            else:
+                stock_data = self._close[stock][:-days]
         else:
-            stock_data = self._close[stock][:-days]
+            if stock_stream == 'high':
+                stock_data = self._high[stock]
+            elif stock_stream == 'low':
+                stock_data = self._low[stock]
+            elif stock_stream == 'open':
+                stock_data = self._open[stock]
+            else:
+                stock_data = self._close[stock]
         for x in range(0, len(covid_data) - 6, 7):
             if x + 7 < len(covid_data):
                 corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
