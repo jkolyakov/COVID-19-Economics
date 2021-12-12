@@ -90,7 +90,8 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
         base[actual_index] = data[i]
 
 
-def spike_determiner(stock: list[float], covid: list[float], stocks: str, threshold: int) -> list[int]:
+def spike_determiner(stock: list[float], covid: list[float], stocks: str,
+                     threshold: int) -> list[int]:
     """Checks to see what time periods count as spikes in both stock price and covid numbers
      and returns those indices with a threshold of 1 day.
 
@@ -177,8 +178,8 @@ def return_correlation_coefficient(covid: list[float], stock: list[float]) -> an
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': [],  # TODO
-        'allowed-io': [],  # TODO
+        'extra-imports': ['datetime', 'pandas'],
+        'allowed-io': [],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']
     })

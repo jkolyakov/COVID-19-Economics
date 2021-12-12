@@ -26,6 +26,8 @@ class DataManager:
     _high: dict[str, list[float]]
     _low: dict[str, list[float]]
     _close: dict[str, list[float]]
+    # TODO consolidate the high/low/open/close into a single dict
+    #  to stop python-ta fron being a big baby about having more than 7 instance attributes.
     _start: datetime.date
     _end: datetime.date
     _duration: int
@@ -164,8 +166,9 @@ class DataManager:
             - all(len(self._close[x]) > 2 for x in self._close)
             - len(matching_spikes(self._high[stock], self._covid[country], threshold)[0]) > 2
 
-        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, datetime.date(2020, 6, 1), \
-                            datetime.date(2021, 1, 10))
+        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                                      datetime.date(2020, 6, 1), \
+                                      datetime.date(2021, 1, 10))
         >>> usa_and_snp.get_weekly_local_statistics('close', 'snp500', 'usa', 2000)
         0.20409776423112042
         """
@@ -184,8 +187,8 @@ class DataManager:
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': [],  # TODO
-        'allowed-io': [],  # TODO
+        'extra-imports': ['datetime', 'pandas', 'parse_data', 'process_data'],
+        'allowed-io': [],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']
     })

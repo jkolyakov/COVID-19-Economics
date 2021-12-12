@@ -64,13 +64,13 @@ class UserInterface:
                 id='global-weekly-countries',
                 options=[{'label': LONG_NAMES[country], 'value': country}
                          for country in countries],
-                value=[country for country in countries]
+                value=list(countries)
             ),
             dcc.Checklist(
                 id='global-weekly-stocks',
                 options=[{'label': LONG_NAMES[stock], 'value': stock}
                          for stock in stocks],
-                value=[stock for stock in stocks]
+                value=list(stocks)
             ),
             html.H2('Local Correlation'),
             dcc.Graph(id='local-weekly-graph'),
@@ -94,13 +94,13 @@ class UserInterface:
                 id='local-weekly-countries',
                 options=[{'label': LONG_NAMES[country], 'value': country}
                          for country in countries],
-                value=[country for country in countries]
+                value=list(countries)
             ),
             dcc.Checklist(
                 id='local-weekly-stocks',
                 options=[{'label': LONG_NAMES[stock], 'value': stock}
                          for stock in stocks],
-                value=[stock for stock in stocks]
+                value=list(stocks)
             )
         ])
 
@@ -135,17 +135,18 @@ class UserInterface:
         Preconditions:
             - TODO
         """
-        combinations = [(country, stock) for country in countries for stock in stocks]
+        combinations = [(c, s) for c in countries for s in stocks]
 
         data = {}
 
         for country, stock in combinations:
             label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
-            id = f'{days}-{country}-{stock}-{stream}'
-            if id not in self._global_trend_cache:
-                self._global_trend_cache[id] = self._source.get_weekly_global_statistics(stream, days, stock, country)
+            metric_id = f'{days}-{country}-{stock}-{stream}'
+            if metric_id not in self._global_trend_cache:
+                stats = self._source.get_weekly_global_statistics(stream, days, stock, country)
+                self._global_trend_cache[metric_id] = stats
 
-            data[label] = self._global_trend_cache[id]
+            data[label] = self._global_trend_cache[metric_id]
 
         return px.line(data)
 
@@ -158,22 +159,24 @@ class UserInterface:
         Preconditions:
             - TODO
         """
-        combinations = [(country, stock) for country in countries for stock in stocks]
+        combinations = [(c, s) for c in countries for s in stocks]
 
         data = {'x_vals': [], 'Correlation Coefficient': []}
 
         for country, stock in combinations:
             data['x_vals'].append(f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}')
-            data['Correlation Coefficient'].append(self._source.get_weekly_local_statistics(stream, stock,
-                                                                                            country, threshold))
+            data['Correlation Coefficient'].append(
+                self._source.get_weekly_local_statistics(stream, stock, country, threshold))
+
         return px.bar(data, x='x_vals', y='Correlation Coefficient')
 
 
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': [],  # TODO
-        'allowed-io': [],  # TODO
+        'extra-imports': ['dash', 'dash.dependencies', 'plotly.express',
+                          'data_management', 'config'],
+        'allowed-io': [],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']
     })

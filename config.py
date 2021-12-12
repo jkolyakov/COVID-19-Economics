@@ -42,8 +42,8 @@ LONG_NAMES = {
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': [],  # TODO
-        'allowed-io': [],  # TODO
+        'extra-imports': ['datetime'],
+        'allowed-io': [],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']
     })

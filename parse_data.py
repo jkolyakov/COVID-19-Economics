@@ -60,8 +60,8 @@ def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.dat
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': [],  # TODO
-        'allowed-io': [],  # TODO
+        'extra-imports': ['csv', 'datetime'],
+        'allowed-io': ['parse_stock_data_file', 'parse_covid_data_file'],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']
     })
