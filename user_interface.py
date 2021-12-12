@@ -21,6 +21,7 @@ class UserInterface:
     """
     _app: dash.Dash
     _source: DataManager
+    _global_trend_cache: dict[str, list[float]]
 
     def __init__(self, data_source: DataManager, countries: set[str], stocks: set[str]) -> None:
         """Setup the user interface to use data_source to calculate statistics.
@@ -31,6 +32,7 @@ class UserInterface:
         TODO doctests?
         """
         self._source = data_source
+        self._global_trend_cache = {}
 
         self._app = dash.Dash(
             __name__,
@@ -139,7 +141,11 @@ class UserInterface:
 
         for country, stock in combinations:
             label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
-            data[label] = self._source.get_weekly_global_statistics(stream, days, stock, country)
+            id = f'{days}-{country}-{stock}-{stream}'
+            if id not in self._global_trend_cache:
+                self._global_trend_cache[id] = self._source.get_weekly_global_statistics(stream, days, stock, country)
+
+            data[label] = self._global_trend_cache[id]
 
         return px.line(data)
 
