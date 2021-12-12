@@ -93,6 +93,7 @@ class DataManager:
                                      country: str) -> list[float]:
         """Output a list of weekly correlation coefficients derived from the stock_stream data for
         stock compared against the covid data of country.
+        TODO: Write out logic in the graph that is being created from this data
 
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
@@ -138,13 +139,15 @@ class DataManager:
         # Replaces all NotANumber values with 0.0. This is okay and will not change the final
         # results as those values occur when no new covid cases occur all week, which is equivalent
         # to saying covid cases had no correlation to the fluctuation in stock price.
+        # FIXME: Check comment and whether we actually want to go with 0.0 to fill the nan values
         final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
         return final_corr
 
     def get_weekly_local_statistics(self, stock_stream: str, stock: str,
-                                    country: str, threshold: int) -> list[float]:
+                                    country: str, threshold: int) -> float:
         """ Filters the data for matching spikes and returns a list of weekly correlation
         coefficients.
+        TODO: Write out logic in the graph that is being created from this data
 
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
@@ -160,31 +163,17 @@ class DataManager:
         >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, datetime.date(2020, 6, 1), \
                             datetime.date(2021, 1, 10))
         >>> usa_and_snp.get_weekly_local_statistics('close', 'snp500', 'usa', 2000)
-        [-0.1744901947744926, 0.24748674436964416, 0.222584643125142, -0.27479041810784716]
+        0.20409776423112042
         """
-        corr_data = []
         if stock_stream == 'high':
-            spike_data = matching_spikes(self._high[stock], self._covid[country], threshold)
+            spike_data = matching_spikes(self._high[stock], self._covid[country], stock, threshold)
         elif stock_stream == 'low':
-            spike_data = matching_spikes(self._low[stock], self._covid[country], threshold)
+            spike_data = matching_spikes(self._low[stock], self._covid[country], stock, threshold)
         elif stock_stream == 'open':
-            spike_data = matching_spikes(self._open[stock], self._covid[country], threshold)
+            spike_data = matching_spikes(self._open[stock], self._covid[country], stock, threshold)
         else:
-            spike_data = matching_spikes(self._close[stock], self._covid[country], threshold)
-        if len(spike_data[0]) >= 7:
-            for x in range(0, len(spike_data[0]), 7):
-                if x + 7 < len(spike_data[0]):
-                    corr_data.append(return_correlation_coefficient(spike_data[0][x:x + 7],
-                                                                    spike_data[1][x:x + 7]))
-                else:
-                    corr_data.append(return_correlation_coefficient(spike_data[0][x:],
-                                                                    spike_data[1][x:]))
-        else:
-            corr_data.append(return_correlation_coefficient(spike_data[0], spike_data[1]))
-        # Replaces all NotANumber values with 0.0. This is okay and will not change the final
-        # results as those values occur when no new covid cases occur all week, which is equivalent
-        # to saying covid cases had no correlation to the fluctuation in stock price.
-        final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
+            spike_data = matching_spikes(self._close[stock], self._covid[country], stock,   threshold)
+        final_corr = return_correlation_coefficient(spike_data[0], spike_data[1])
         return final_corr
 
 
@@ -271,12 +260,13 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
         base[actual_index] = data[i]
 
 
-def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> list[int]:
+def spike_determiner(stock: list[float], covid: list[float], stocks: str, threshold: int) -> list[int]:
     """Checks to see what time periods count as spikes in both stock price and covid numbers
      and returns those indices with a threshold of 1 day.
 
     Preconditions:
         - len(stock) == len(covid)
+        - stocks in {'tx60', snp500}
     >>> stock = [1, 75, 80, 100, 46]
     >>> covid = [2000, 1324, 1678, 1232, 1899]
     >>> spike_determiner(stock, covid, 1500)
@@ -284,13 +274,17 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
 
     """
     spikes = []
+    if stocks == 'tx60':
+        stock_spike = 20.0
+    else:
+        stock_spike = 50.0
     for x in range(len(stock) - 1):
-        if abs(stock[x + 1]) >= 50 and covid[x] >= threshold:
+        if abs(stock[x + 1]) >= stock_spike and covid[x] >= threshold:
             spikes.append(x)
     return spikes
 
 
-def matching_spikes(stock: list[float], covid: list[float], threshold: int) \
+def matching_spikes(stock: list[float], covid: list[float], stocks: str, threshold: int) \
         -> list[list[int], list[int]]:
     """Matching the day of the first time covid broke the threshold with the first day of
     the first stock spike. Will return list with the covid spike indices lined up with the
@@ -300,6 +294,7 @@ def matching_spikes(stock: list[float], covid: list[float], threshold: int) \
         - len(stock) == len(covid)
         - all(x < len(covid) for x in spikes)
         - all(x < len(stock) - 1 for x in spikes)
+        - stocks in {'tx60', snp500}
 
     >>> stock = [1, 75, 80, 100, 46]
     >>> covid = [2000, 1324, 1678, 1232, 1899]
@@ -307,7 +302,7 @@ def matching_spikes(stock: list[float], covid: list[float], threshold: int) \
     [[2000, 1678], [75, 100]]
     """
     final_data = [[], []]
-    spikes = spike_determiner(stock, covid, threshold)
+    spikes = spike_determiner(stock, covid, stocks, threshold)
     for x in spikes:
         final_data[0].append(covid[x])
         final_data[1].append(stock[x + 1])
@@ -341,4 +336,9 @@ def return_correlation_coefficient(covid: list[float], stock: list[float]) -> an
     data = convert_data(covid, stock)
     df = pd.DataFrame(data, columns=['covid', 'stocks'])
     correlation = df.corr()
-    return correlation['covid']['stocks']
+    # FIXME: not rly a fix me but check if we want to go with this if statement
+    #  to avoid callback errors
+    if correlation.empty or correlation['covid']['stocks'] >= 1.0:
+        return 0.0
+    else:
+        return correlation['covid']['stocks']

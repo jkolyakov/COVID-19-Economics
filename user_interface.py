@@ -70,7 +70,7 @@ class UserInterface:
                          for stock in stocks],
                 value=[stock for stock in stocks]
             ),
-            html.H2('Local Weekly Trends'),
+            html.H2('Local Correlation'),
             dcc.Graph(id='local-weekly-graph'),
             dcc.Slider(
                 id='local-weekly-threshold',
@@ -154,11 +154,10 @@ class UserInterface:
         """
         combinations = [(country, stock) for country in countries for stock in stocks]
 
-        data = {}
+        data = {'x_vals': [], 'Correlation Coefficient': []}
 
         for country, stock in combinations:
-            label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
-            data[label] = self._source.get_weekly_local_statistics(stream, stock,
-                                                                   country, threshold)
-
-        return px.line(data)
+            data['x_vals'].append(f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}')
+            data['Correlation Coefficient'].append(self._source.get_weekly_local_statistics(stream, stock,
+                                                                                            country, threshold))
+        return px.bar(data, x='x_vals', y='Correlation Coefficient')
