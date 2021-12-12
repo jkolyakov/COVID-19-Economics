@@ -20,7 +20,7 @@ if __name__ == '__main__':
     )
     gui = UserInterface(
         data_source=manager,
-        countries={'can': 'Canada', 'chn': 'China', 'usa': 'United States of America'},
-        stocks={'snp500': 'SNP500', 'tx60': 'TX60'},
+        countries={'can', 'chn', 'usa'},
+        stocks={'snp500', 'tx60'}
     )
     gui.run()

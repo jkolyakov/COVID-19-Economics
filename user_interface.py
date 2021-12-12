@@ -10,6 +10,8 @@ import plotly.express as px
 
 from process_data import DataManager
 
+from constants import LONG_NAMES
+
 
 class UserInterface:
     """Class that holds all the state necessary to display the statistical data
@@ -20,8 +22,7 @@ class UserInterface:
     _app: dash.Dash
     _source: DataManager
 
-    def __init__(self, data_source: DataManager, countries: dict[str, str],
-                 stocks: dict[str, str]) -> None:
+    def __init__(self, data_source: DataManager, countries: set[str], stocks: set[str]) -> None:
         """Setup the user interface to use data_source to calculate statistics.
 
         Preconditions:
@@ -59,13 +60,13 @@ class UserInterface:
             ),
             dcc.Checklist(
                 id='global-weekly-countries',
-                options=[{'label': countries[country], 'value': country}
+                options=[{'label': LONG_NAMES[country], 'value': country}
                          for country in countries],
                 value=[country for country in countries]
             ),
             dcc.Checklist(
                 id='global-weekly-stocks',
-                options=[{'label': stocks[stock], 'value': stock}
+                options=[{'label': LONG_NAMES[stock], 'value': stock}
                          for stock in stocks],
                 value=[stock for stock in stocks]
             ),
@@ -89,13 +90,13 @@ class UserInterface:
             ),
             dcc.Checklist(
                 id='local-weekly-countries',
-                options=[{'label': countries[country], 'value': country}
+                options=[{'label': LONG_NAMES[country], 'value': country}
                          for country in countries],
                 value=[country for country in countries]
             ),
             dcc.Checklist(
                 id='local-weekly-stocks',
-                options=[{'label': stocks[stock], 'value': stock}
+                options=[{'label': LONG_NAMES[stock], 'value': stock}
                          for stock in stocks],
                 value=[stock for stock in stocks]
             )
@@ -137,7 +138,7 @@ class UserInterface:
         data = {}
 
         for country, stock in combinations:
-            label = f'{country}-{stock}'
+            label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
             data[label] = self._source.get_weekly_global_statistics(stream, days, stock, country)
 
         return px.line(data)
@@ -156,7 +157,7 @@ class UserInterface:
         data = {}
 
         for country, stock in combinations:
-            label = f'{country}-{stock}'
+            label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
             data[label] = self._source.get_weekly_local_statistics(stream, stock,
                                                                    country, threshold)
 
