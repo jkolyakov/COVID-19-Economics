@@ -131,12 +131,13 @@ class DataManager:
                 stock_data = self._close[stock]
         for x in range(0, len(covid_data) - 6, 7):
             if x + 7 < len(covid_data):
-                # breakpoint()
                 corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
                                                                 stock_data[x:x + 7]))
             else:
-                # breakpoint()
                 corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
+        # Replaces all NotANumber values with 0.0. This is okay and will not change the final
+        # results as those values occur when no new covid cases occur all week, which is equivalent
+        # to saying covid cases had no correlation to the fluctuation in stock price.
         final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
         return final_corr
 
@@ -180,7 +181,11 @@ class DataManager:
                                                                     spike_data[1][x:]))
         else:
             corr_data.append(return_correlation_coefficient(spike_data[0], spike_data[1]))
-        return corr_data
+        # Replaces all NotANumber values with 0.0. This is okay and will not change the final
+        # results as those values occur when no new covid cases occur all week, which is equivalent
+        # to saying covid cases had no correlation to the fluctuation in stock price.
+        final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
+        return final_corr
 
 
 def differentiate_stock_data(data: list[float]) -> list[float]:
