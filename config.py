@@ -1,7 +1,6 @@
 """
 Useful constants.
 """
-
 import datetime
 
 # TODO description
@@ -39,3 +38,18 @@ LONG_NAMES = {
     'snp500': 'SNP500',
     'tx60': 'TX60'
 }
+
+if __name__ == '__main__':
+    import python_ta
+    python_ta.check_all(config={
+        'extra-imports': [],  # TODO
+        'allowed-io': [],  # TODO
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200']
+    })
+
+    import python_ta.contracts
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+    doctest.testmod()

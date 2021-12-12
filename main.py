@@ -3,9 +3,8 @@ Program entry point.
 """
 import datetime
 
-from process_data import DataManager
+from data_management import DataManager
 from user_interface import UserInterface
-
 from config import DATA_FILES, START_DATE, END_DATE, ALL_COUNTRIES, ALL_STOCKS
 
 if __name__ == '__main__':

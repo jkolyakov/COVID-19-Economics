@@ -55,3 +55,19 @@ def parse_covid_data_file(filename: str, start: datetime.date, end: datetime.dat
             cases_so_far.append(int(row[1]))
 
         return (dates_so_far, cases_so_far)
+
+
+if __name__ == '__main__':
+    import python_ta
+    python_ta.check_all(config={
+        'extra-imports': [],  # TODO
+        'allowed-io': [],  # TODO
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200']
+    })
+
+    import python_ta.contracts
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+    doctest.testmod()

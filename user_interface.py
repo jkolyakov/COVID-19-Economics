@@ -1,15 +1,15 @@
 """
 User interface code.
+
+This is the front end.
 """
 import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
-
 import plotly.express as px
 
-from process_data import DataManager
-
+from data_management import DataManager
 from config import LONG_NAMES
 
 
@@ -167,3 +167,19 @@ class UserInterface:
             data['Correlation Coefficient'].append(self._source.get_weekly_local_statistics(stream, stock,
                                                                                             country, threshold))
         return px.bar(data, x='x_vals', y='Correlation Coefficient')
+
+
+if __name__ == '__main__':
+    import python_ta
+    python_ta.check_all(config={
+        'extra-imports': [],  # TODO
+        'allowed-io': [],  # TODO
+        'max-line-length': 100,
+        'disable': ['R1705', 'C0200']
+    })
+
+    import python_ta.contracts
+    python_ta.contracts.check_all_contracts()
+
+    import doctest
+    doctest.testmod()
