@@ -6,21 +6,17 @@ import datetime
 from process_data import DataManager
 from user_interface import UserInterface
 
+from config import DATA_FILES, START_DATE, END_DATE, ALL_COUNTRIES, ALL_STOCKS
+
 if __name__ == '__main__':
     manager = DataManager(
-        sources={
-            'data/covid-can.csv',
-            'data/covid-chn.csv',
-            'data/covid-usa.csv',
-            'data/stock-snp500.csv',
-            'data/stock-tx60.csv'
-        },
-        start=datetime.date(2020, 1, 1),
-        end=datetime.date(2021, 1, 1)
+        sources=DATA_FILES,
+        start=START_DATE,
+        end=END_DATE
     )
     gui = UserInterface(
         data_source=manager,
-        countries={'can', 'chn', 'usa'},
-        stocks={'snp500', 'tx60'}
+        countries=ALL_COUNTRIES,
+        stocks=ALL_STOCKS
     )
     gui.run()

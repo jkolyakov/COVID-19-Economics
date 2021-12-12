@@ -10,7 +10,7 @@ import plotly.express as px
 
 from process_data import DataManager
 
-from constants import LONG_NAMES
+from config import LONG_NAMES
 
 
 class UserInterface:
