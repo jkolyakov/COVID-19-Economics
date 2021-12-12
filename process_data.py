@@ -150,10 +150,12 @@ class DataManager:
             - all(len(self._low[x]) > 2 for x in self._low)
             - all(len(self._open[x]) > 2 for x in self._open)
             - all(len(self._close[x]) > 2 for x in self._close)
+            - len(matching_spikes(self._high[stock], self._covid[country], threshold)[0]) > 2
 
-        >>> #TODO
-        # FIXME this does not work (or i just don't know how to use it), seems to always
-           return and empty array
+        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, datetime.date(2020, 6, 1), \
+                            datetime.date(2021, 1, 10))
+        >>> usa_and_snp.get_weekly_local_statistics('close', 'snp500', 'usa', 2000)
+        [-0.1744901947744926, 0.24748674436964416, 0.222584643125142, -0.27479041810784716]
         """
         corr_data = []
         if stock_stream == 'high':
@@ -164,10 +166,9 @@ class DataManager:
             spike_data = matching_spikes(self._open[stock], self._covid[country], threshold)
         else:
             spike_data = matching_spikes(self._close[stock], self._covid[country], threshold)
-
         if len(spike_data[0]) >= 7:
-            for x in range(0, len(spike_data) - 6, 7):
-                if x + 7 < len(spike_data):
+            for x in range(0, len(spike_data[0]), 7):
+                if x + 7 < len(spike_data[0]):
                     corr_data.append(return_correlation_coefficient(spike_data[0][x:x + 7],
                                                                     spike_data[1][x:x + 7]))
                 else:
@@ -275,7 +276,7 @@ def spike_determiner(stock: list[float], covid: list[float], threshold: int) -> 
     """
     spikes = []
     for x in range(len(stock) - 1):
-        if abs(stock[x + 1]) >= 75 and covid[x] >= threshold:
+        if abs(stock[x + 1]) >= 50 and covid[x] >= threshold:
             spikes.append(x)
     return spikes
 
@@ -318,8 +319,11 @@ def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
     return final_data
 
 
-def return_correlation_coefficient(covid: list[float], stock: list[float]) -> float:
+def return_correlation_coefficient(covid: list[float], stock: list[float]) -> any:
     """Returns correlation matrix from the data
+
+    Preconditions
+        - len(convert_data(covid, stock)) > 2
     >>> import math
     >>> c = return_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
     >>> math.isclose(-0.8510644963469901, c)
