@@ -23,6 +23,7 @@ class UserInterface:
     _app: dash.Dash
     _source: DataManager
     _global_trend_cache: dict[str, list[float]]
+    _local_trend_cache: dict[str, float]
 
     def __init__(self, data_source: DataManager, countries: set[str], stocks: set[str]) -> None:
         """Setup the user interface to use data_source to calculate statistics.
@@ -34,6 +35,7 @@ class UserInterface:
         """
         self._source = data_source
         self._global_trend_cache = {}
+        self._local_trend_cache = {}
 
         self._app = dash.Dash(__name__)
 
@@ -155,8 +157,6 @@ class UserInterface:
                                      countries: list[str], stocks: list[str]) -> Figure:
         """Create the plotly graph for the global trends graph. TODO better description
 
-        TODO cache :) (this is where the fun starts)
-
         Preconditions:
             - TODO
         """
@@ -166,6 +166,7 @@ class UserInterface:
 
         for country, stock in combinations:
             label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
+
             metric_id = f'{country}-{stock}-{stream}'
             if metric_id not in self._global_trend_cache:
                 stats = self._source.get_global_statistics(stream, 100, stock, country)
@@ -179,8 +180,6 @@ class UserInterface:
                                     max_days: int) -> Figure:
         """Create the plotly for the local trends graph. TODO better description
 
-        TODO cache :) (this is where the fun starts)
-
         Preconditions:
             - TODO
         """
@@ -189,10 +188,14 @@ class UserInterface:
         data = {'Country/Stock Combination': [], 'Correlation Coefficient': []}
 
         for country, stock in combinations:
+            metric_id = f'{country}-{stock}-{stream}-{max_days}'
+            if metric_id not in self._local_trend_cache:
+                stat = self._source.get_local_statistics(stream, stock, country, max_days)
+                self._local_trend_cache[metric_id] = stat
+
             data['Country/Stock Combination']\
                 .append(f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}')
-            data['Correlation Coefficient'].append(
-                self._source.get_local_statistics(stream, stock, country, max_days))
+            data['Correlation Coefficient'].append(self._local_trend_cache[metric_id])
 
         return px.bar(data, x='Country/Stock Combination', y='Correlation Coefficient')
 
