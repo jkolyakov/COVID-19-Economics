@@ -18,7 +18,7 @@ DATA_FILES = {
 
 # The time range of the analysis.
 START_DATE = datetime.date(2020, 1, 1)
-END_DATE = datetime.date(2021, 1, 1)
+END_DATE = datetime.date(2021, 11, 1)
 
 # Sets of only the country codes or the stock codes.
 ALL_COUNTRIES = {

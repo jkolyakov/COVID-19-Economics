@@ -11,7 +11,7 @@ This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov.
 """
 from data_management import DataManager
 from user_interface import UserInterface
-from config import DATA_FILES, START_DATE, END_DATE, ALL_COUNTRIES, ALL_STOCKS
+from config import DATA_FILES, START_DATE, END_DATE
 
 if __name__ == '__main__':
     import python_ta.contracts
@@ -22,9 +22,5 @@ if __name__ == '__main__':
         start=START_DATE,
         end=END_DATE
     )
-    gui = UserInterface(
-        data_source=manager,
-        countries=ALL_COUNTRIES,
-        stocks=ALL_STOCKS
-    )
+    gui = UserInterface(manager)
     gui.run(debug=True)  # TODO turn debug off before submission

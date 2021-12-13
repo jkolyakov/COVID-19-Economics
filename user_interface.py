@@ -15,7 +15,7 @@ import plotly.express as px
 from plotly.graph_objs import Figure  # for type contracts
 
 from data_management import DataManager
-from config import LONG_NAMES
+from config import LONG_NAMES, ALL_STOCKS, ALL_COUNTRIES
 
 
 class UserInterface:
@@ -27,133 +27,56 @@ class UserInterface:
         - self._app is not None
         - self._global_trend_cache is not None
         - self._local_trend_cache is not None
-        - all(len(s) == 3 for s in self._countries)
 
     >>> import datetime
     >>> dm = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
                          datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
-    >>> ui = UserInterface(dm, {'usa'}, {'snp500'})
+    >>> ui = UserInterface(dm)
     """
     # Private Instance Attributes:
     #     - _app: The dash web application that will display the data and handle coordinating
     #             update requests.
     #     - _source: The backend source of data to be displayed.  The _source provides an interface
     #                for the graph data.
-    #     - _countries: Set of all possible country codes.
-    #     - _stocks: Set of all possible valid stock codes.
     #     - _global_trend_cache: A mapping from a unique id of a set of graphed data to the data
     #                            itself.  This allows us to skip noticeably slower calculations.
     #     - _local_trend_cache: A mapping from a unique id of a graphed datapoint to the data
     #                           itself.  This allows us to skip noticeably slower calculations.
     _app: dash.Dash
     _source: DataManager
-    _countries: set[str]
-    _stocks: set[str]
     _global_trend_cache: dict[str, list[float]]
     _local_trend_cache: dict[str, float]
 
-    def __init__(self, data_source: DataManager, countries: set[str], stocks: set[str]) -> None:
+    def __init__(self, data_source: DataManager) -> None:
         """Setup the user interface to use data_source to calculate statistics.
 
         Preconditions:
             - data_source is not None
-            - countries != set()
-            - all(len(s) == 3 for s in countries)
-            - stocks != set()
         """
         self._source = data_source
-        self._countries = countries
-        self._stocks = stocks
         self._global_trend_cache = {}
         self._local_trend_cache = {}
 
         self._app = dash.Dash(__name__)
 
         # setup the app layout
-        # TODO ugly repeated code
         self._app.layout = html.Div(className='content', children=[
             html.H1('Global Trends'),
             dcc.Graph(id='global-graph'),
-            html.Div(className='controls', children=[
-                html.Div(className='control', children=[
-                    html.H4('Stock Stream'),
-                    dcc.Dropdown(
-                        id='global-stream',
-                        options=[{'label': 'Open', 'value': 'open'},
-                                 {'label': 'High', 'value': 'high'},
-                                 {'label': 'Low', 'value': 'low'},
-                                 {'label': 'Close', 'value': 'close'}],
-                        value='open',
-                        clearable=False
-                    )
-                ]),
-                html.Div(className='control', children=[
-                    html.H4('Countries'),
-                    dcc.Checklist(
-                        id='global-countries',
-                        options=[{'label': LONG_NAMES[country], 'value': country}
-                                 for country in countries],
-                        value=list(countries),
-                    ),
-                ]),
-                html.Div(className='control', children=[
-                    html.H4('Stocks'),
-                    dcc.Checklist(
-                        id='global-stocks',
-                        options=[{'label': LONG_NAMES[stock], 'value': stock}
-                                 for stock in stocks],
-                        value=list(stocks)
-                    )
-                ]),
-            ]),
+            make_control_widget('global', []),
             html.Hr(),
             html.H1('Local Trends'),
             dcc.Graph(id='local-graph'),
-            html.Div(className='controls', children=[
+            make_control_widget('local', extra_controls=[
                 html.Div(className='large-control', children=[
                     html.H4('Maximum Market Reaction Time (days)'),
                     dcc.Slider(
                         id='local-max-days',
                         min=0,
-                        max=30,
+                        max=90,
                         step=1,
-                        marks={
-                            0: '0',
-                            10: '10',
-                            20: '20',
-                            30: '30'
-                        },
+                        marks={x * 10: str(x * 10) for x in range(10)},
                         value=0
-                    )
-                ]),
-                html.Div(className='control', children=[
-                    html.H4('Stock Stream'),
-                    dcc.Dropdown(
-                        id='local-stream',
-                        options=[{'label': 'Open', 'value': 'open'},
-                                 {'label': 'High', 'value': 'high'},
-                                 {'label': 'Low', 'value': 'low'},
-                                 {'label': 'Close', 'value': 'close'}],
-                        value='open',
-                        clearable=False
-                    )
-                ]),
-                html.Div(className='control', children=[
-                    html.H4('Countries'),
-                    dcc.Checklist(
-                        id='local-countries',
-                        options=[{'label': LONG_NAMES[country], 'value': country}
-                                 for country in countries],
-                        value=list(countries),
-                    ),
-                ]),
-                html.Div(className='control', children=[
-                    html.H4('Stocks'),
-                    dcc.Checklist(
-                        id='local-stocks',
-                        options=[{'label': LONG_NAMES[stock], 'value': stock}
-                                 for stock in stocks],
-                        value=list(stocks)
                     )
                 ])
             ]),
@@ -161,7 +84,9 @@ class UserInterface:
             html.P(
                 'Copyright \u00A9 2021, Theodore Preduta and Jacob Kolyakov.',
                 className='copyright-text'
-            )
+            ),
+            html.Br(),
+            html.Br()
         ])
 
         # add update methods
@@ -192,8 +117,8 @@ class UserInterface:
 
         Preconditions:
             - stream in {'open', 'close', 'high', 'low'}
-            - all(c in self._countries for c in countries)
-            - all(s in self._stocks for c in stocks)
+            - all(c in ALL_COUNTRIES for c in countries)
+            - all(s in ALL_STOCKS for c in stocks)
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
@@ -204,12 +129,15 @@ class UserInterface:
 
             metric_id = f'{country}-{stock}-{stream}'
             if metric_id not in self._global_trend_cache:
-                stats = self._source.get_global_statistics(stream, 100, stock, country)
+                stats = self._source.get_global_statistics(stream, 90, stock, country)
                 self._global_trend_cache[metric_id] = stats
 
             data[label] = self._global_trend_cache[metric_id]
 
-        return px.line(data)  # TODO name the axis
+        figure = px.line(data)
+        figure.update_xaxes(title_text='Shift (days)')
+        figure.update_yaxes(title_text='Correlation Coefficient')
+        return figure
 
     def _update_local_weekly_trends(self, stream: str, countries: list[str], stocks: list[str],
                                     max_days: int) -> Figure:
@@ -219,8 +147,8 @@ class UserInterface:
 
         Preconditions:
             - stream in {'open', 'close', 'high', 'low'}
-            - all(c in self._countries for c in countries)
-            - all(s in self._stocks for c in stocks)
+            - all(c in ALL_COUNTRIES for c in countries)
+            - all(s in ALL_STOCKS for c in stocks)
             - max_days >= 0
         """
         combinations = [(c, s) for c in countries for s in stocks]
@@ -238,6 +166,49 @@ class UserInterface:
             data['Correlation Coefficient'].append(self._local_trend_cache[metric_id])
 
         return px.bar(data, x='Country/Stock Combination', y='Correlation Coefficient')
+
+
+def make_control_widget(id_prefix: str, extra_controls: list[html.Div]) -> html.Div:
+    """Make an instance of a control widget containing the list of possible countries and
+    stocks along with a stock stream selector, all with id id_prefix-<widget>.  If extra_controls
+    is not empty, the the contents of extra_controls will be added before the stock stream widget.
+
+    Preconditions:
+        - id_prefix != ''
+    """
+    return html.Div(className='controls', children=[
+        *extra_controls,
+        html.Div(className='control', children=[
+            html.H4('Stock Stream'),
+            dcc.Dropdown(
+                id=f'{id_prefix}-stream',
+                options=[{'label': 'Open', 'value': 'open'},
+                         {'label': 'High', 'value': 'high'},
+                         {'label': 'Low', 'value': 'low'},
+                         {'label': 'Close', 'value': 'close'}],
+                value='open',
+                clearable=False
+            )
+        ]),
+        html.Div(className='control', children=[
+            html.H4('Countries'),
+            dcc.Checklist(
+                id=f'{id_prefix}-countries',
+                options=[{'label': LONG_NAMES[country], 'value': country}
+                         for country in ALL_COUNTRIES],
+                value=list(ALL_COUNTRIES),
+            ),
+        ]),
+        html.Div(className='control', children=[
+            html.H4('Stocks'),
+            dcc.Checklist(
+                id=f'{id_prefix}-stocks',
+                options=[{'label': LONG_NAMES[stock], 'value': stock}
+                         for stock in ALL_STOCKS],
+                value=list(ALL_STOCKS)
+            )
+        ]),
+    ])
 
 
 if __name__ == '__main__':
