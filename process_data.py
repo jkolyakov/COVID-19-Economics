@@ -135,7 +135,11 @@ def find_matching_spikes(stock: list[float], covid: list[int], max_gap: int) \
     >>> stock = [1.0, 1.0, 0.0, 1.0, 0.0]
     >>> covid = [  1,   0,   1,   0,   0]
     >>> find_matching_spikes(stock, covid, 2)
-    ([1.0, 1.0, 1.0], [1, 1, 0])
+    ([1.0, 1.0, 1.0], [1, 0, 1])
+    >>> stock = [1.0, 1.0, 0.0, 0.0, 0.0]
+    >>> covid = [  1,   0,   1,   0,   0]
+    >>> find_matching_spikes(stock, covid, 2)
+    ([1.0, 1.0, 0.0], [1, 0, 1])
     """
     stock_threshold = inflated_abs_average(stock)
     covid_threshold = inflated_abs_average(covid)
@@ -146,14 +150,22 @@ def find_matching_spikes(stock: list[float], covid: list[int], max_gap: int) \
     stock_index = 0
     covid_index = 0
     while stock_index < len(stock) or covid_index < len(covid):
+        # Search linearly through stock until we find a spike.
+        # When this loop ends the value at stock_index will be that spike.
         while stock_index < len(stock) and abs(stock[stock_index]) < stock_threshold:
             stock_index += 1
 
+        # Search linearly through covid until we find a spike.
+        # When this loop ends the value at stock_index will be that spike.
         while covid_index < len(covid) and abs(covid[covid_index]) < covid_threshold:
             covid_index += 1
 
+        # Edge case: if we reach the end of both lists, don't consider the indices.
         if stock_index >= len(stock) and covid_index >= len(covid):
             break
+
+        # When one of the indices has reached the end, but the other is still valid, we match the
+        # valid one with 0 or 0.0.
         elif stock_index >= len(stock):
             stock_spikes_so_far.append(0.0)
             covid_spikes_so_far.append(covid[covid_index])
@@ -162,11 +174,17 @@ def find_matching_spikes(stock: list[float], covid: list[int], max_gap: int) \
             stock_spikes_so_far.append(stock[stock_index])
             covid_spikes_so_far.append(0)
             stock_index += 1
-        elif abs(stock_index - covid_index) <= max_gap:
+
+        # When both indices are in valid, and covid_index is no more than max_gap before
+        # stock_index, we can match the points together.
+        elif 0 <= stock_index - covid_index <= max_gap:
             stock_spikes_so_far.append(stock[stock_index])
             covid_spikes_so_far.append(covid[covid_index])
             covid_index += 1
             stock_index += 1
+
+        # When both indices are in range, but have an invalid gap, we can match the one farther
+        # behind with 0 or 0.0.
         elif covid_index < stock_index:
             stock_spikes_so_far.append(0.0)
             covid_spikes_so_far.append(covid[covid_index])
