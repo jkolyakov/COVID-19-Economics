@@ -211,23 +211,25 @@ def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
     return final_data
 
 
-def calculate_correlation_coefficient(covid: list[float], stock: list[float]) -> any:
-    """Returns correlation matrix from the data
+def find_correlation_coefficient(covid: list[float], stock: list[float]) -> float:
+    """Returns correlation coefficient of covid against stock, assuming that that equal indices
+    imply equal dates.
 
     Preconditions
+        - len(covid) == len(stock)
         - len(convert_data(covid, stock)) > 2
+
     >>> import math
-    >>> c = calculate_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
+    >>> c = find_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
     >>> math.isclose(-0.8510644963469901, c)
     True
-
-    # TODO rename this function
     """
     data = convert_data(covid, stock)
     df = pd.DataFrame(data, columns=['covid', 'stocks'])
     correlation = df.corr()
-    # FIXME: not rly a fix me but check if we want to go with this if statement
-    #  to avoid callback errors
+
+    # If there is not enough data to calculate a correlation coefficient, for our purposes it
+    # suffices that we can say there is 0 correlation.  This avoids complexity in the caller.
     if correlation.empty or correlation['covid']['stocks'] >= 1.0:
         return 0.0
     else:
