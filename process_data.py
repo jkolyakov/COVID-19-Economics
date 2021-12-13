@@ -197,12 +197,13 @@ def matching_spikes(stock: list[float], covid: list[float], stocks: str, country
     return final_data
 
 
-def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
-    """Converts spike data into form that will be accepted by the Panda's library DataFrame class
+def convert_to_lengthwise(covid: list[float], stock: list[float]) -> list[tuple]:
+    """Converts spike data into form that will be accepted by the Panda's library DataFrame class.
 
     Preconditions:
         - len(covid) == len(stock)
-    >>> convert_data([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
+
+    >>> convert_to_lengthwise([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
     [(0.2, 0.3), (0.0, 0.6), (0.6, 0.0), (0.2, 0.1)]
     """
     final_data = []
@@ -224,7 +225,7 @@ def find_correlation_coefficient(covid: list[float], stock: list[float]) -> floa
     >>> math.isclose(-0.8510644963469901, c)
     True
     """
-    data = convert_data(covid, stock)
+    data = convert_to_lengthwise(covid, stock)
     df = pd.DataFrame(data, columns=['covid', 'stocks'])
     correlation = df.corr()
 
