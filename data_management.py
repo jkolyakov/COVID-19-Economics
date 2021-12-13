@@ -10,7 +10,7 @@ import datetime
 
 from parse_data import parse_covid_data_file, parse_stock_data_file
 from process_data import fill_covid_data, fill_stock_data, differentiate_stock_data, \
-    return_correlation_coefficient, matching_spikes
+    calculate_correlation_coefficient, matching_spikes
 
 
 class DataManager:
@@ -115,14 +115,14 @@ class DataManager:
 
         >>> # TODO maybe?
         """
-        initial_corr = return_correlation_coefficient(self._covid[country],
-                                                      self._stocks[stock_stream][stock])
+        initial_corr = calculate_correlation_coefficient(self._covid[country],
+                                                         self._stocks[stock_stream][stock])
         data_so_far = [initial_corr]
 
         for shift in range(1, days + 1):
             stock_data = self._stocks[stock_stream][stock][shift:]
             covid_data = self._covid[country][:-shift]
-            corr = return_correlation_coefficient(covid_data, stock_data)
+            corr = calculate_correlation_coefficient(covid_data, stock_data)
             data_so_far.append(corr)
 
         return data_so_far
@@ -154,7 +154,7 @@ class DataManager:
             max_gap = 0
         data = matching_spikes(self._stocks[stock_stream][stock],
                                self._covid[country], stock, country, max_gap)
-        return return_correlation_coefficient(data[0], data[1])
+        return calculate_correlation_coefficient(data[0], data[1])
 
 
 if __name__ == '__main__':

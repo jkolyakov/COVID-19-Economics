@@ -46,7 +46,6 @@ def fill_stock_data(dates: list[datetime.date], data: list[float], start: dateti
     Preconditions:
         - len(data) == len(dates)
         - start < end
-        - TODO there are way more preconditions
 
     >>> fill_stock_data([datetime.date(2021, 1, 2), datetime.date(2021, 1, 4)], \
                         [1.0, 2.0], datetime.date(2021, 1, 1), datetime.date(2021, 1, 4))
@@ -66,14 +65,13 @@ def fill_covid_data(dates: list[datetime.date], data: list[int], start: datetime
     Preconditions:
         - len(data) == len(dates)
         - start < end
-        - TODO there are way more preconditions
 
     >>> fill_covid_data([datetime.date(2021, 1, 2), datetime.date(2021, 1, 4)], \
                         [1, 2], datetime.date(2021, 1, 1), datetime.date(2021, 1, 4))
     [0, 1, 0, 2]
     """
     filled_data = [0] * ((end - start).days + 1)
-    fill_data(dates, data, filled_data, start, )
+    fill_data(dates, data, filled_data, start)
     return filled_data
 
 
@@ -84,10 +82,15 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
 
     Preconditions:
         - len(data) == len(dates)
-        - start < end
-        - TODO there are way more preconditions
+        - TODO preconditions on each date in dates
 
-    >>> # TODO
+    >>> dates = [datetime.date(2021, 1, 2), datetime.date(2021, 1, 4), datetime.date(2021, 1, 10)]
+    >>> data = [1, 2, 3]
+    >>> base = [0] * 10
+    >>> start = datetime.date(2021, 1, 1)
+    >>> fill_data(dates, data, base, start)
+    >>> base
+    [0, 1, 0, 2, 0, 0, 0, 0, 0, 3]
     """
     for i in range(len(dates)):
         actual_index = (dates[i] - start).days
@@ -208,13 +211,13 @@ def convert_data(covid: list[float], stock: list[float]) -> list[tuple]:
     return final_data
 
 
-def return_correlation_coefficient(covid: list[float], stock: list[float]) -> any:
+def calculate_correlation_coefficient(covid: list[float], stock: list[float]) -> any:
     """Returns correlation matrix from the data
 
     Preconditions
         - len(convert_data(covid, stock)) > 2
     >>> import math
-    >>> c = return_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
+    >>> c = calculate_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
     >>> math.isclose(-0.8510644963469901, c)
     True
 
@@ -233,7 +236,6 @@ def return_correlation_coefficient(covid: list[float], stock: list[float]) -> an
 
 if __name__ == '__main__':
     import python_ta
-
     python_ta.check_all(config={
         'extra-imports': ['datetime', 'pandas'],
         'allowed-io': [],
@@ -242,9 +244,7 @@ if __name__ == '__main__':
     })
 
     import python_ta.contracts
-
     python_ta.contracts.check_all_contracts()
 
     import doctest
-
     doctest.testmod()
