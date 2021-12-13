@@ -5,11 +5,9 @@ This file acts as a state backend.
 """
 import datetime
 
-import pandas as pd
-
 from parse_data import parse_covid_data_file, parse_stock_data_file
 from process_data import fill_covid_data, fill_stock_data, differentiate_stock_data, \
-    return_correlation_coefficient, matching_spikes
+    return_correlation_coefficient
 
 
 class DataManager:
@@ -92,11 +90,14 @@ class DataManager:
         """
         return self._start + datetime.timedelta(days=index)
 
-    def get_weekly_global_statistics(self, stock_stream: str, days: int, stock: str,
-                                     country: str) -> list[float]:
-        """Output a list of weekly correlation coefficients derived from the stock_stream data for
-        stock compared against the covid data of country.
-        TODO: Write out logic in the graph that is being created from this data
+    def get_global_statistics(self, stock_stream: str, days: int, stock: str,
+                              country: str) -> list[float]:
+        """TODO: write this descirption again
+
+        Logic:
+            1. ASSUME that the reaction time of the stock market is constant.
+            2. Therefore, if we shift the stock data back, the correlation coefficient will spike
+               to a statistically significant value at a single point.
 
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
@@ -107,37 +108,35 @@ class DataManager:
             - all(len(self._high[x]) > 2 for x in self._high)
             - all(len(self._low[x]) > 2 for x in self._low)
             - all(len(self._open[x]) > 2 for x in self._open)
-            - all(len(self._close[x]) > 2 for x in self._close)
+            - all(len(self._close[x]) > 2 for x in self._close) # TODO fix these
 
         >>> # TODO
         # TODO: check if lack of data causes error
         """
-        corr_data = []
-        covid_data = self._covid[country][days:]
-        final_corr: list[float]
-        if days != 0:
-            stock_data = self._stocks[stock_stream][stock][:-days]
-        else:
-            stock_data = self._stocks[stock_stream][stock]
+        initial_corr = return_correlation_coefficient(self._covid[country],
+                                                      self._stocks[stock_stream][stock])
+        data_so_far = [initial_corr]
 
-        for x in range(0, len(covid_data) - 6, 7):
-            if x + 7 < len(covid_data):
-                corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
-                                                                stock_data[x:x + 7]))
-            else:
-                corr_data.append(return_correlation_coefficient(covid_data[x:], stock_data[x:]))
-        # Replaces all NotANumber values with 0.0. This is okay and will not change the final
-        # results as those values occur when no new covid cases occur all week, which is equivalent
-        # to saying covid cases had no correlation to the fluctuation in stock price.
-        # FIXME: Check comment and whether we actually want to go with 0.0 to fill the nan values
-        final_corr = [0.0 if pd.isna(y) else y for y in corr_data]
-        return final_corr
+        for shift in range(1, days):
+            stock_data = self._stocks[stock_stream][stock][shift:]
+            covid_data = self._covid[country][:-shift]
+            corr = return_correlation_coefficient(covid_data, stock_data)
+            data_so_far.append(corr)
 
-    def get_weekly_local_statistics(self, stock_stream: str, stock: str,
-                                    country: str, threshold: int) -> float:
-        """ Filters the data for matching spikes and returns a list of weekly correlation
-        coefficients.
-        TODO: Write out logic in the graph that is being created from this data
+        return data_so_far
+
+    def get_local_statistics(self, stock_stream: str, stock: str, country: str,
+                             max_gap: int) -> float:
+        """TODO write this description
+
+        Logic:
+            1. ASSUME that IF the stock reacts, it will react within max_dap days.
+            2. ASSUME that IF the stock reacts, it will react for each spike in the covid data.
+            3. ASSUME that IF for every stock spike, there should be COVID spike.
+            4. Therefore if this is true, by matching the spikes up in a greedy way, the correlation
+               coeficient, will be statistically signficant.
+
+        TODO reword 2 and 3
 
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
@@ -150,16 +149,9 @@ class DataManager:
             - all(len(self._close[x]) > 2 for x in self._close)
             - len(matching_spikes(self._high[stock], self._covid[country], threshold)[0]) > 2
 
-        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
-                                      datetime.date(2020, 6, 1), \
-                                      datetime.date(2021, 1, 10))
-        >>> usa_and_snp.get_weekly_local_statistics('close', 'snp500', 'usa', 2000)
-        0.20409776423112042
+        >>> # TODO
         """
-        spike_data = matching_spikes(self._stocks[stock_stream][stock], self._covid[country],
-                                     stock, threshold)
-        final_corr = return_correlation_coefficient(spike_data[0], spike_data[1])
-        return final_corr
+        pass
 
 
 if __name__ == '__main__':

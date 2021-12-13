@@ -44,14 +44,6 @@ class UserInterface:
         self._app.layout = html.Div([
             html.H2('Global Weekly Trends'),
             dcc.Graph(id='global-weekly-graph'),
-            dcc.Slider(
-                id='global-weekly-days',
-                min=0,
-                max=31,
-                step=1,
-                value=0,
-                marks={x: f'{x}' for x in range(32)}
-            ),
             dcc.Dropdown(
                 id='global-weekly-stream',
                 options=[{'label': 'Open', 'value': 'open'},
@@ -77,10 +69,14 @@ class UserInterface:
             dcc.Slider(
                 id='local-weekly-threshold',
                 min=0,
-                max=10000,
+                max=30,
                 step=100,
                 value=0,
-                marks={x: f'{x}' for x in range(0, 10000, 1000)}
+                marks={
+                    0: '0',
+                    15: '15',
+                    30: '30'
+                }
             ),
             dcc.Dropdown(
                 id='local-weekly-stream',
@@ -107,8 +103,7 @@ class UserInterface:
         # add update methods
         self._app.callback(
             Output(component_id='global-weekly-graph', component_property='figure'),
-            [Input(component_id='global-weekly-days', component_property='value'),
-             Input(component_id='global-weekly-stream', component_property='value'),
+            [Input(component_id='global-weekly-stream', component_property='value'),
              Input(component_id='global-weekly-countries', component_property='value'),
              Input(component_id='global-weekly-stocks', component_property='value')]
         )(self._update_global_weekly_trends)
@@ -126,7 +121,7 @@ class UserInterface:
         """
         self._app.run_server(debug=True)
 
-    def _update_global_weekly_trends(self, days: int, stream: str,
+    def _update_global_weekly_trends(self, stream: str,
                                      countries: list[str], stocks: list[str]):
         """Create the plotly graph for the global trends graph. TODO better description
 
@@ -141,17 +136,17 @@ class UserInterface:
 
         for country, stock in combinations:
             label = f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}'
-            metric_id = f'{days}-{country}-{stock}-{stream}'
+            metric_id = f'{country}-{stock}-{stream}'
             if metric_id not in self._global_trend_cache:
-                stats = self._source.get_weekly_global_statistics(stream, days, stock, country)
+                stats = self._source.get_global_statistics(stream, 100, stock, country)
                 self._global_trend_cache[metric_id] = stats
 
             data[label] = self._global_trend_cache[metric_id]
 
-        return px.line(data)
+        return px.line(data)  # TODO name the axis
 
     def _update_local_weekly_trends(self, stream: str, countries: list[str], stocks: list[str],
-                                    threshold: int):
+                                    max_days: int):
         """Create the plotly for the local trends graph. TODO better description
 
         TODO cache :) (this is where the fun starts)
@@ -161,14 +156,15 @@ class UserInterface:
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
-        data = {'x_vals': [], 'Correlation Coefficient': []}
+        data = {'Country/Stock Combination': [], 'Correlation Coefficient': []}
 
         for country, stock in combinations:
-            data['x_vals'].append(f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}')
+            data['Country/Stock Combination']\
+                .append(f'{LONG_NAMES[country]} v. {LONG_NAMES[stock]}')
             data['Correlation Coefficient'].append(
-                self._source.get_weekly_local_statistics(stream, stock, country, threshold))
+                self._source.get_local_statistics(stream, stock, country, max_days))
 
-        return px.bar(data, x='x_vals', y='Correlation Coefficient')
+        return px.bar(data, x='Country/Stock Combination', y='Correlation Coefficient')
 
 
 if __name__ == '__main__':

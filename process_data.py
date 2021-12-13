@@ -163,6 +163,8 @@ def return_correlation_coefficient(covid: list[float], stock: list[float]) -> an
     >>> c = return_correlation_coefficient([0.2 , 0.0, 0.6, 0.2], [0.3, 0.6, 0.0, 0.1])
     >>> math.isclose(-0.8510644963469901, c)
     True
+
+    # TODO rename this function
     """
     data = convert_data(covid, stock)
     df = pd.DataFrame(data, columns=['covid', 'stocks'])
