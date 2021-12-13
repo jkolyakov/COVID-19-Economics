@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 
 from data_management import DataManager
-from config import LONG_NAMES
+from config import LONG_NAMES, STYLE_URL
 
 
 class UserInterface:
@@ -36,84 +36,114 @@ class UserInterface:
 
         self._app = dash.Dash(
             __name__,
-            external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css']
-            # TODO we should really be writing our own css instead of just using this
+            external_stylesheets=[STYLE_URL]
         )
 
         # setup the app layout
-        self._app.layout = html.Div([
-            html.H2('Global Weekly Trends'),
-            dcc.Graph(id='global-weekly-graph'),
-            dcc.Dropdown(
-                id='global-weekly-stream',
-                options=[{'label': 'Open', 'value': 'open'},
-                         {'label': 'High', 'value': 'high'},
-                         {'label': 'Low', 'value': 'low'},
-                         {'label': 'Close', 'value': 'close'}],
-                value='open'
-            ),
-            dcc.Checklist(
-                id='global-weekly-countries',
-                options=[{'label': LONG_NAMES[country], 'value': country}
-                         for country in countries],
-                value=list(countries)
-            ),
-            dcc.Checklist(
-                id='global-weekly-stocks',
-                options=[{'label': LONG_NAMES[stock], 'value': stock}
-                         for stock in stocks],
-                value=list(stocks)
-            ),
-            html.H2('Local Correlation'),
-            dcc.Graph(id='local-weekly-graph'),
-            dcc.Slider(
-                id='local-weekly-threshold',
-                min=0,
-                max=30,
-                step=100,
-                value=0,
-                marks={
-                    0: '0',
-                    15: '15',
-                    30: '30'
-                }
-            ),
-            dcc.Dropdown(
-                id='local-weekly-stream',
-                options=[{'label': 'Open', 'value': 'open'},
-                         {'label': 'High', 'value': 'high'},
-                         {'label': 'Low', 'value': 'low'},
-                         {'label': 'Close', 'value': 'close'}],
-                value='open'
-            ),
-            dcc.Checklist(
-                id='local-weekly-countries',
-                options=[{'label': LONG_NAMES[country], 'value': country}
-                         for country in countries],
-                value=list(countries)
-            ),
-            dcc.Checklist(
-                id='local-weekly-stocks',
-                options=[{'label': LONG_NAMES[stock], 'value': stock}
-                         for stock in stocks],
-                value=list(stocks)
+        self._app.layout = html.Div(className='content', children=[
+            html.H1('Global Trends'),
+            dcc.Graph(id='global-graph'),
+            html.Div(className='controls', children=[
+                html.Div(className='control', children=[
+                    html.H4('Stock Stream'),
+                    dcc.Dropdown(
+                        id='global-stream',
+                        options=[{'label': 'Open', 'value': 'open'},
+                                 {'label': 'High', 'value': 'high'},
+                                 {'label': 'Low', 'value': 'low'},
+                                 {'label': 'Close', 'value': 'close'}],
+                        value='open'
+                    )
+                ]),
+                html.Div(className='control', children=[
+                    html.H4('Countries'),
+                    dcc.Checklist(
+                        id='global-countries',
+                        options=[{'label': LONG_NAMES[country], 'value': country}
+                                 for country in countries],
+                        value=list(countries),
+                    ),
+                ]),
+                html.Div(className='control', children=[
+                    html.H4('Stocks'),
+                    dcc.Checklist(
+                        id='global-stocks',
+                        options=[{'label': LONG_NAMES[stock], 'value': stock}
+                                 for stock in stocks],
+                        value=list(stocks)
+                    )
+                ]),
+            ]),
+            html.Hr(),
+            html.H1('Local Trends'),
+            dcc.Graph(id='local-graph'),
+            html.Div(className='controls', children=[
+                html.Div(className='large-control', children=[
+                    html.H4('Maximum Market Reaction Time (days)'),
+                    dcc.Slider(
+                        id='local-max-days',
+                        min=0,
+                        max=30,
+                        step=1,
+                        marks={
+                            0: '0',
+                            10: '10',
+                            20: '20',
+                            30: '30'
+                        }
+                    )
+                ]),
+                html.Div(className='control', children=[
+                    html.H4('Stock Stream'),
+                    dcc.Dropdown(
+                        id='local-stream',
+                        options=[{'label': 'Open', 'value': 'open'},
+                                 {'label': 'High', 'value': 'high'},
+                                 {'label': 'Low', 'value': 'low'},
+                                 {'label': 'Close', 'value': 'close'}],
+                        value='open'
+                    )
+                ]),
+                html.Div(className='control', children=[
+                    html.H4('Countries'),
+                    dcc.Checklist(
+                        id='local-countries',
+                        options=[{'label': LONG_NAMES[country], 'value': country}
+                                 for country in countries],
+                        value=list(countries),
+                    ),
+                ]),
+                html.Div(className='control', children=[
+                    html.H4('Stocks'),
+                    dcc.Checklist(
+                        id='local-stocks',
+                        options=[{'label': LONG_NAMES[stock], 'value': stock}
+                                 for stock in stocks],
+                        value=list(stocks)
+                    )
+                ])
+            ]),
+            html.Hr(),
+            html.P(
+                'Copyright \u00A9 2021, Theodore Preduta and Jacob Kolyakov.',
+                className='copyright-text'
             )
         ])
 
         # add update methods
         self._app.callback(
-            Output(component_id='global-weekly-graph', component_property='figure'),
-            [Input(component_id='global-weekly-stream', component_property='value'),
-             Input(component_id='global-weekly-countries', component_property='value'),
-             Input(component_id='global-weekly-stocks', component_property='value')]
+            Output(component_id='global-graph', component_property='figure'),
+            [Input(component_id='global-stream', component_property='value'),
+             Input(component_id='global-countries', component_property='value'),
+             Input(component_id='global-stocks', component_property='value')]
         )(self._update_global_weekly_trends)
 
         self._app.callback(
-            Output(component_id='local-weekly-graph', component_property='figure'),
-            [Input(component_id='local-weekly-stream', component_property='value'),
-             Input(component_id='local-weekly-countries', component_property='value'),
-             Input(component_id='local-weekly-stocks', component_property='value'),
-             Input(component_id='local-weekly-threshold', component_property='value')]
+            Output(component_id='local-graph', component_property='figure'),
+            [Input(component_id='local-stream', component_property='value'),
+             Input(component_id='local-countries', component_property='value'),
+             Input(component_id='local-stocks', component_property='value'),
+             Input(component_id='local-max-days', component_property='value')]
         )(self._update_local_weekly_trends)
 
     def run(self) -> None:
@@ -129,6 +159,8 @@ class UserInterface:
 
         Preconditions:
             - TODO
+
+        # FIXME this function can actually receive an empty string for stock stream
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
@@ -153,6 +185,8 @@ class UserInterface:
 
         Preconditions:
             - TODO
+
+        # FIXME this function can actually receive an empty string for stock stream
         """
         combinations = [(c, s) for c in countries for s in stocks]
 

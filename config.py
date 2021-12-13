@@ -39,6 +39,13 @@ LONG_NAMES = {
     'tx60': 'TX60'
 }
 
+# TODO description
+STYLE_URL = 'https://gist.githubusercontent.com/6167656e74323431/b218f77e072c4'\
+            '0746de03d6d7f74ce1f/raw/0570945d49e80be0d889d6f2774aad1d4954a77c/'\
+            'style.css'
+# If this isn't reason enough for python-ta to allow longer strings, i don't
+# know what is. :-)
+
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
