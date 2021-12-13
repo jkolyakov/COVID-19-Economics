@@ -7,7 +7,7 @@ import datetime
 
 from parse_data import parse_covid_data_file, parse_stock_data_file
 from process_data import fill_covid_data, fill_stock_data, differentiate_stock_data, \
-    return_correlation_coefficient
+    return_correlation_coefficient, matching_spikes, convert_data
 
 
 class DataManager:
@@ -151,11 +151,16 @@ class DataManager:
 
         >>> # TODO
         """
-        pass
+        if max_gap is None:
+            max_gap = 0
+        data = matching_spikes(self._stocks[stock_stream][stock],
+                               self._covid[country], stock, country, max_gap)
+        return return_correlation_coefficient(data[0], data[1])
 
 
 if __name__ == '__main__':
     import python_ta
+
     python_ta.check_all(config={
         'extra-imports': ['datetime', 'pandas', 'parse_data', 'process_data'],
         'allowed-io': [],
@@ -164,7 +169,9 @@ if __name__ == '__main__':
     })
 
     import python_ta.contracts
+
     python_ta.contracts.check_all_contracts()
 
     import doctest
+
     doctest.testmod()

@@ -90,33 +90,58 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
         base[actual_index] = data[i]
 
 
-def spike_determiner(stock: list[float], covid: list[float], stocks: str,
-                     threshold: int) -> list[int]:
+def is_stock_spike(stock: list[float], stocks: str, stock_index: int) -> bool:
     """Checks to see what time periods count as spikes in both stock price and covid numbers
      and returns those indices with a threshold of 1 day.
 
     Preconditions:
         - len(stock) == len(covid)
         - stocks in {'tx60', snp500}
+        - index < len(stock) and index < len(covid)
     >>> stock = [1, 75, 80, 100, 46]
     >>> covid = [2000, 1324, 1678, 1232, 1899]
-    >>> spike_determiner(stock, covid, 1500)  # FIXME this does not work
+    # >>> is_spike(stock, covid)  # FIXME this does not work
     [0, 2]
 
     """
-    spikes = []
     if stocks == 'tx60':
         stock_spike = 20.0
     else:
         stock_spike = 50.0
-    for x in range(len(stock) - 1):
-        if abs(stock[x + 1]) >= stock_spike and covid[x] >= threshold:
-            spikes.append(x)
-    return spikes
+    if abs(stock[stock_index]) >= stock_spike:
+        return True
+    else:
+        return False
 
 
-def matching_spikes(stock: list[float], covid: list[float], stocks: str, threshold: int) \
-        -> list[list[int], list[int]]:
+def is_covid_spike(covid: list[float], country: str, covid_index: int) -> bool:
+    """Checks to see what time periods count as spikes in both stock price and covid numbers
+        and returns those indices with a threshold of 1 day.
+
+       Preconditions:
+           - len(stock) == len(covid)
+           - stocks in {'tx60', snp500}
+           - index < len(stock) and index < len(covid)
+       >>> stock = [1, 75, 80, 100, 46]
+       >>> covid = [2000, 1324, 1678, 1232, 1899]
+       # >>> is_spike(stock, covid)  # FIXME this does not work
+       [0, 2]
+
+       """
+    if country == 'can':
+        covid_spike = 1610
+    elif country == 'usa':
+        covid_spike = 55384
+    else:
+        covid_spike = 235
+    if covid[covid_index] >= covid_spike:
+        return True
+    else:
+        return False
+
+
+def matching_spikes(stock: list[float], covid: list[float], stocks: str, country: str,
+                    max_gap: int) -> list[list[int], list[int]]:
     """Matching the day of the first time covid broke the threshold with the first day of
     the first stock spike. Will return list with the covid spike indices lined up with the
     correlating stock spike indices.
@@ -133,10 +158,25 @@ def matching_spikes(stock: list[float], covid: list[float], stocks: str, thresho
     [[2000, 1678], [75, 100]]
     """
     final_data = [[], []]
-    spikes = spike_determiner(stock, covid, stocks, threshold)
-    for x in spikes:
-        final_data[0].append(covid[x])
-        final_data[1].append(stock[x + 1])
+
+    stock_index_so_far = set()
+
+    for x in range(len(covid)):
+        if_add = False
+        if is_covid_spike(covid, country, x):
+            final_data[0].append(covid[x])
+            for y in range(x, x + max_gap + 1):
+                if y < len(stock) and is_stock_spike(stock, stocks, y) and y not in stock_index_so_far:
+                    final_data[1].append(stock[y])
+                    stock_index_so_far.add(y)
+                    if_add = True
+                    break
+            if not if_add:
+                final_data[1].append(0.0)
+    for z in range(len(stock)):
+        if is_stock_spike(stock, stocks, z) and z not in stock_index_so_far:
+            final_data[0].append(0.0)
+            final_data[1].append(stock[z])
     return final_data
 
 
@@ -179,6 +219,7 @@ def return_correlation_coefficient(covid: list[float], stock: list[float]) -> an
 
 if __name__ == '__main__':
     import python_ta
+
     python_ta.check_all(config={
         'extra-imports': ['datetime', 'pandas'],
         'allowed-io': [],
@@ -187,7 +228,9 @@ if __name__ == '__main__':
     })
 
     import python_ta.contracts
+
     python_ta.contracts.check_all_contracts()
 
     import doctest
+
     doctest.testmod()
