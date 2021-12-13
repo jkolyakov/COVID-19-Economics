@@ -146,19 +146,12 @@ def find_matching_spikes(stock: list[float], covid: list[int], max_gap: int) \
     stock_index = 0
     covid_index = 0
     while stock_index < len(stock) or covid_index < len(covid):
-        while stock_index < len(stock):
-            if abs(stock[stock_index]) >= stock_threshold:
-                break
-            else:
-                stock_index += 1
+        while stock_index < len(stock) and abs(stock[stock_index]) < stock_threshold:
+            stock_index += 1
 
-        while covid_index < len(covid):
-            if abs(covid[covid_index]) >= covid_threshold:
-                break
-            else:
-                covid_index += 1
+        while covid_index < len(covid) and abs(covid[covid_index]) < covid_threshold:
+            covid_index += 1
 
-        # TODO we have to simplify this boolean algebra to make pythonTA happy :)
         if stock_index >= len(stock) and covid_index >= len(covid):
             break
         elif stock_index >= len(stock):
