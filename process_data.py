@@ -140,6 +140,21 @@ def is_covid_spike(covid: list[float], country: str, covid_index: int) -> bool:
         return False
 
 
+def append_matching_spikes(stock: list[float], stocks: str, numbers: list[int],
+                           stock_index_so_far: set, final_data: list[list]) -> bool:
+    """A helper function for matching_spikes that checks for matching stock spike values
+    within the allowed gap and returns whether one was found/added
+
+    >>> # TODO
+    """
+    for y in range(numbers[0], numbers[0] + numbers[1] + 1):
+        if y < len(stock) and is_stock_spike(stock, stocks, y) and y not in stock_index_so_far:
+            final_data[1].append(stock[y])
+            stock_index_so_far.add(y)
+            return True
+    return False
+
+
 def matching_spikes(stock: list[float], covid: list[float], stocks: str, country: str,
                     max_gap: int) -> list[list[int], list[int]]:
     """Matching the day of the first time covid broke the threshold with the first day of
@@ -162,15 +177,10 @@ def matching_spikes(stock: list[float], covid: list[float], stocks: str, country
     stock_index_so_far = set()
 
     for x in range(len(covid)):
-        if_add = False
         if is_covid_spike(covid, country, x):
             final_data[0].append(covid[x])
-            for y in range(x, x + max_gap + 1):
-                if y < len(stock) and is_stock_spike(stock, stocks, y) and y not in stock_index_so_far:
-                    final_data[1].append(stock[y])
-                    stock_index_so_far.add(y)
-                    if_add = True
-                    break
+            if_add = append_matching_spikes(stock, stocks,
+                                            [x, max_gap], stock_index_so_far, final_data)
             if not if_add:
                 final_data[1].append(0.0)
     for z in range(len(stock)):
