@@ -1,5 +1,9 @@
-"""
-This file is where the acutal data processing happens
+"""COVID-19 Economics - Data Processing
+
+This module consists of helper functions that perform the data manipulations
+and call into the pandas module.
+
+This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov.
 """
 import datetime
 from typing import Union

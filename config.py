@@ -1,9 +1,13 @@
-"""
-Useful constants.
+"""COVID-19 Economics - Project Configuration
+
+This module consists of constants used to define the scope of the analysis of
+this program.
+
+This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov.
 """
 import datetime
 
-# TODO description
+# The set of data files that will be analyzed.
 DATA_FILES = {
     'data/covid-can.csv',
     'data/covid-chn.csv',
@@ -12,11 +16,11 @@ DATA_FILES = {
     'data/stock-tx60.csv'
 }
 
-# TODO description
+# The time range of the analysis.
 START_DATE = datetime.date(2020, 1, 1)
 END_DATE = datetime.date(2021, 1, 1)
 
-# TODO description
+# Sets of only the country codes or the stock codes.
 ALL_COUNTRIES = {
     'can',
     'chn',
@@ -27,7 +31,7 @@ ALL_STOCKS = {
     'tx60'
 }
 
-# TODO description
+# Mapping of the codes to longer english names used for display purposes.
 LONG_NAMES = {
     # Countries
     'can': 'Canada',

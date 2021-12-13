@@ -1,5 +1,9 @@
-"""
-Get the data from a file, and convert it to the appropriate types from types.py.
+"""COVID-19 Economics - File Parsing
+
+This module consists of helper functions used to read and parse individual
+data files.  All the file IO in this project happens within this file.
+
+This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov.
 """
 import csv
 import datetime

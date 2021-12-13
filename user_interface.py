@@ -1,14 +1,18 @@
-"""
-User interface code.
+"""COVID-19 Economics - User Interface
 
-This is the front end.
+This module consists of all the user interface code for the project.  By itself
+this file does not do any data processing, it only handles taking user input and
+calling the appropriate backend interface (or retrieving the values from a
+cache).
+
+This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov.
 """
 import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
-from plotly.graph_objs import Figure
+from plotly.graph_objs import Figure  # for type contracts
 
 from data_management import DataManager
 from config import LONG_NAMES
@@ -148,10 +152,10 @@ class UserInterface:
              Input(component_id='local-max-days', component_property='value')]
         )(self._update_local_weekly_trends)
 
-    def run(self) -> None:
+    def run(self, debug: bool = False) -> None:
         """Start the user interface.
         """
-        self._app.run_server(debug=True)
+        self._app.run_server(debug=debug, port=8050)
 
     def _update_global_weekly_trends(self, stream: str,
                                      countries: list[str], stocks: list[str]) -> Figure:
