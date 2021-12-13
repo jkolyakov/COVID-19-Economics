@@ -22,12 +22,7 @@ class DataManager:
                                   datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
     """
     _covid: dict[str, list[int]]
-    _open: dict[str, list[float]]
-    _high: dict[str, list[float]]
-    _low: dict[str, list[float]]
-    _close: dict[str, list[float]]
-    # TODO consolidate the high/low/open/close into a single dict
-    #  to stop python-ta fron being a big baby about having more than 7 instance attributes.
+    _stocks: dict[str, dict[str, list[float]]]
     _start: datetime.date
     _end: datetime.date
     _duration: int
@@ -45,10 +40,12 @@ class DataManager:
         self._duration = (end - start).days + 1
 
         self._covid = {}
-        self._open = {}
-        self._high = {}
-        self._low = {}
-        self._close = {}
+        self._stocks = {
+            'open': {},
+            'high': {},
+            'low': {},
+            'close': {}
+        }
         self._start = start
         self._end = end
 
@@ -62,22 +59,22 @@ class DataManager:
                 assert len(self._covid[name]) == self._duration
             elif 'stock-' in source:
                 dates, *data = parse_stock_data_file(source, start - datetime.timedelta(days=1),
-                                                     end)  # TODO ugly-ish
+                                                     end)
 
                 data = [differentiate_stock_data(x) for x in data]
                 dates.pop(0)  # the above implicitly chops off the first element
 
                 data = [fill_stock_data(dates, x, start, end) for x in data]
 
-                self._open[name] = data[0]
-                self._high[name] = data[1]
-                self._low[name] = data[2]
-                self._close[name] = data[3]
+                self._stocks['open'][name] = data[0]
+                self._stocks['high'][name] = data[1]
+                self._stocks['low'][name] = data[2]
+                self._stocks['close'][name] = data[3]
 
-                assert len(self._open[name]) == self._duration
-                assert len(self._high[name]) == self._duration
-                assert len(self._low[name]) == self._duration
-                assert len(self._close[name]) == self._duration
+                assert len(self._stocks['open'][name]) == self._duration
+                assert len(self._stocks['high'][name]) == self._duration
+                assert len(self._stocks['low'][name]) == self._duration
+                assert len(self._stocks['close'][name]) == self._duration
             else:
                 raise AssertionError('Invalid data type.')
 
@@ -119,23 +116,10 @@ class DataManager:
         covid_data = self._covid[country][days:]
         final_corr: list[float]
         if days != 0:
-            if stock_stream == 'high':
-                stock_data = self._high[stock][:-days]
-            elif stock_stream == 'low':
-                stock_data = self._low[stock][:-days]
-            elif stock_stream == 'open':
-                stock_data = self._open[stock][:-days]
-            else:
-                stock_data = self._close[stock][:-days]
+            stock_data = self._stocks[stock_stream][stock][:-days]
         else:
-            if stock_stream == 'high':
-                stock_data = self._high[stock]
-            elif stock_stream == 'low':
-                stock_data = self._low[stock]
-            elif stock_stream == 'open':
-                stock_data = self._open[stock]
-            else:
-                stock_data = self._close[stock]
+            stock_data = self._stocks[stock_stream][stock]
+
         for x in range(0, len(covid_data) - 6, 7):
             if x + 7 < len(covid_data):
                 corr_data.append(return_correlation_coefficient(covid_data[x:x + 7],
@@ -159,9 +143,9 @@ class DataManager:
             - stock_stream in {'high', 'low', 'open', 'close'}
             - stock in self._open
             - country in self._covid
-            - all(len(self._covid[x]) > 2 for x in self._covid)
-            - all(len(self._high[x]) > 2 for x in self._high)
-            - all(len(self._low[x]) > 2 for x in self._low)
+            - all(len(self._covid[x]) > 2 for x in self._covid) # TODO this needs to be redone
+            - all(len(self._high[x]) > 2 for x in self._high)   #  after the change to the new
+            - all(len(self._low[x]) > 2 for x in self._low)     #  format
             - all(len(self._open[x]) > 2 for x in self._open)
             - all(len(self._close[x]) > 2 for x in self._close)
             - len(matching_spikes(self._high[stock], self._covid[country], threshold)[0]) > 2
@@ -172,14 +156,8 @@ class DataManager:
         >>> usa_and_snp.get_weekly_local_statistics('close', 'snp500', 'usa', 2000)
         0.20409776423112042
         """
-        if stock_stream == 'high':
-            spike_data = matching_spikes(self._high[stock], self._covid[country], stock, threshold)
-        elif stock_stream == 'low':
-            spike_data = matching_spikes(self._low[stock], self._covid[country], stock, threshold)
-        elif stock_stream == 'open':
-            spike_data = matching_spikes(self._open[stock], self._covid[country], stock, threshold)
-        else:
-            spike_data = matching_spikes(self._close[stock], self._covid[country], stock, threshold)
+        spike_data = matching_spikes(self._stocks[stock_stream][stock], self._covid[country],
+                                     stock, threshold)
         final_corr = return_correlation_coefficient(spike_data[0], spike_data[1])
         return final_corr
 
