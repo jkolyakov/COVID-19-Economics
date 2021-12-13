@@ -27,20 +27,28 @@ class UserInterface:
         - self._app is not None
         - self._global_trend_cache is not None
         - self._local_trend_cache is not None
+        - all(len(s) == 3 for s in self._countries)
 
-    TODO Sample class setup
+    >>> import datetime
+    >>> dm = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                         datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
+    >>> ui = UserInterface(dm, {'usa'}, {'snp500'})
     """
     # Private Instance Attributes:
     #     - _app: The dash web application that will display the data and handle coordinating
     #             update requests.
     #     - _source: The backend source of data to be displayed.  The _source provides an interface
     #                for the graph data.
+    #     - _countries: Set of all possible country codes.
+    #     - _stocks: Set of all possible valid stock codes.
     #     - _global_trend_cache: A mapping from a unique id of a set of graphed data to the data
     #                            itself.  This allows us to skip noticeably slower calculations.
     #     - _local_trend_cache: A mapping from a unique id of a graphed datapoint to the data
     #                           itself.  This allows us to skip noticeably slower calculations.
     _app: dash.Dash
     _source: DataManager
+    _countries: set[str]
+    _stocks: set[str]
     _global_trend_cache: dict[str, list[float]]
     _local_trend_cache: dict[str, float]
 
@@ -52,10 +60,10 @@ class UserInterface:
             - countries != set()
             - all(len(s) == 3 for s in countries)
             - stocks != set()
-
-        TODO doctests?
         """
         self._source = data_source
+        self._countries = countries
+        self._stocks = stocks
         self._global_trend_cache = {}
         self._local_trend_cache = {}
 
@@ -179,10 +187,13 @@ class UserInterface:
 
     def _update_global_weekly_trends(self, stream: str,
                                      countries: list[str], stocks: list[str]) -> Figure:
-        """Create the plotly graph for the global trends graph. TODO better description
+        """Return an updated graph to display given the user wants to view the data from the
+        combinations of countries with stocks with stream stock stream.
 
         Preconditions:
-            - TODO
+            - stream in {'open', 'close', 'high', 'low'}
+            - all(c in self._countries for c in countries)
+            - all(s in self._stocks for c in stocks)
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
@@ -202,10 +213,15 @@ class UserInterface:
 
     def _update_local_weekly_trends(self, stream: str, countries: list[str], stocks: list[str],
                                     max_days: int) -> Figure:
-        """Create the plotly for the local trends graph. TODO better description
+        """Return an updated graph to display given the user wants to view the data from the
+        combinations of countries with stock stream stock stream given a maximum reaction time
+        of max_days.
 
         Preconditions:
-            - TODO
+            - stream in {'open', 'close', 'high', 'low'}
+            - all(c in self._countries for c in countries)
+            - all(s in self._stocks for c in stocks)
+            - max_days >= 0
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
