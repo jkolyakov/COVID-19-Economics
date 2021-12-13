@@ -52,7 +52,8 @@ class UserInterface:
                                  {'label': 'High', 'value': 'high'},
                                  {'label': 'Low', 'value': 'low'},
                                  {'label': 'Close', 'value': 'close'}],
-                        value='open'
+                        value='open',
+                        clearable=False
                     )
                 ]),
                 html.Div(className='control', children=[
@@ -101,7 +102,8 @@ class UserInterface:
                                  {'label': 'High', 'value': 'high'},
                                  {'label': 'Low', 'value': 'low'},
                                  {'label': 'Close', 'value': 'close'}],
-                        value='open'
+                        value='open',
+                        clearable=False
                     )
                 ]),
                 html.Div(className='control', children=[
@@ -159,8 +161,6 @@ class UserInterface:
 
         Preconditions:
             - TODO
-
-        # FIXME this function can actually receive an empty string for stock stream
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
@@ -185,8 +185,6 @@ class UserInterface:
 
         Preconditions:
             - TODO
-
-        # FIXME this function can actually receive an empty string for stock stream
         """
         combinations = [(c, s) for c in countries for s in stocks]
 
