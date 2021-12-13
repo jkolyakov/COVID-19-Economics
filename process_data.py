@@ -82,7 +82,7 @@ def fill_data(dates: list[datetime.date], data: list[Union[int, float]],
 
     Preconditions:
         - len(data) == len(dates)
-        - TODO preconditions on each date in dates
+        - all(start <= d < (start + datetime.timedelta(days=len(base))) for d in dates)
 
     >>> dates = [datetime.date(2021, 1, 2), datetime.date(2021, 1, 4), datetime.date(2021, 1, 10)]
     >>> data = [1, 2, 3]
