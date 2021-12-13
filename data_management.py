@@ -14,10 +14,11 @@ from process_data import fill_covid_data, fill_stock_data, differentiate_stock_d
 
 
 class DataManager:
-    """Data manager class that will both store and handle processing data from the CSV files
-    into a form that can be used by the Pandas library to calculate a correlation coefficient.
-    TODO: Check if this is OK
-    TODO: do doctests make any sense in this file?
+    """Manage the state of the data analysis.  This storing the data and dispatching the correct
+    methods to process requests for specific analyses.
+
+    Because the primary job of this class is to manage the state of the data, most of the actual
+    calculations are done in a separate module.
 
     Representation Invariants:
         - len(self._stocks) == 4
@@ -25,8 +26,8 @@ class DataManager:
         - self._start < self._end
         - self._duration > 0
 
-    >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
-                                  datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
+    >>> dm = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                         datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
     """
     # Private Instance Attributes:
     #     - _covid: A mapping from a country code the the new covid cases reported at that day.
@@ -47,9 +48,6 @@ class DataManager:
 
     def __init__(self, sources: set[str], start: datetime.date, end: datetime.date) -> None:
         """Load the data from the files in sources, only from start to end inclusive.
-
-        Note that we do not explicitly store the date from here on out. It is assumed that the
-        date in self._<whatever>[i] = _index_to_date. TODO remove this note before final submission
 
         Preconditions:
             - sources != set()
@@ -74,6 +72,7 @@ class DataManager:
                 dates, data = parse_covid_data_file(source, start, end)
                 self._covid[name] = fill_covid_data(dates, data, start, end)
 
+                # Invariants
                 assert len(self._covid[name]) == self._duration
             elif 'stock-' in source:
                 dates, *data = parse_stock_data_file(source, start - datetime.timedelta(days=1),
@@ -89,6 +88,7 @@ class DataManager:
                 self._stocks['low'][name] = data[2]
                 self._stocks['close'][name] = data[3]
 
+                # Invariants
                 assert len(self._stocks['open'][name]) == self._duration
                 assert len(self._stocks['high'][name]) == self._duration
                 assert len(self._stocks['low'][name]) == self._duration
@@ -96,23 +96,11 @@ class DataManager:
             else:
                 raise AssertionError('Invalid data type.')
 
-    def _index_to_date(self, index: int) -> datetime.date:
-        """Convert the index of an element in one of the many lists that this class contains into
-        its canonical date.
-
-        Preconditions:
-            - self.index < self._duration
-
-        >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
-                                  datetime.date(2021, 1, 1), datetime.date(2021, 3, 1))
-        >>> usa_and_snp._index_to_date(5)
-        datetime.date(2021, 1, 6)
-        """
-        return self._start + datetime.timedelta(days=index)
-
     def get_global_statistics(self, stock_stream: str, days: int, stock: str,
                               country: str) -> list[float]:
-        """TODO: write this descirption again
+        """Calculate the correlation coefficient of stock_stream for the combination of stock and
+        country over with a shift from 0 to days inclusive.  The index of the returned list is
+        equal to the shift applied for that correlation coefficient.
 
         Logic:
             1. ASSUME that the reaction time of the stock market is constant.
@@ -122,22 +110,16 @@ class DataManager:
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
             - days > 0
-            - stock in self._open
+            - stock in self._stocks[stock_stream]
             - country in self._covid
-            - all(len(self._covid[x]) > 2 for x in self._covid)
-            - all(len(self._high[x]) > 2 for x in self._high)
-            - all(len(self._low[x]) > 2 for x in self._low)
-            - all(len(self._open[x]) > 2 for x in self._open)
-            - all(len(self._close[x]) > 2 for x in self._close) # TODO fix these
 
-        >>> # TODO
-        # TODO: check if lack of data causes error
+        >>> # TODO maybe?
         """
         initial_corr = return_correlation_coefficient(self._covid[country],
                                                       self._stocks[stock_stream][stock])
         data_so_far = [initial_corr]
 
-        for shift in range(1, days):
+        for shift in range(1, days + 1):
             stock_data = self._stocks[stock_stream][stock][shift:]
             covid_data = self._covid[country][:-shift]
             corr = return_correlation_coefficient(covid_data, stock_data)
@@ -147,29 +129,26 @@ class DataManager:
 
     def get_local_statistics(self, stock_stream: str, stock: str, country: str,
                              max_gap: int) -> float:
-        """TODO write this description
+        """Calculate the correlation correlation coefficient of stock_stream for the combination
+        of stock and county assuming a reaction time of spikes at most max_gap days.
 
         Logic:
             1. ASSUME that IF the stock reacts, it will react within max_dap days.
-            2. ASSUME that IF the stock reacts, it will react for each spike in the covid data.
-            3. ASSUME that IF for every stock spike, there should be COVID spike.
-            4. Therefore if this is true, by matching the spikes up in a greedy way, the correlation
+            2. ASSUME that the stock market only makes big jumps because of covid.
+            3. Therefore because of (1) IF the stock reacts there will be a matching spike within
+               a max_gap interval.
+            4. Therefore because of (2) IF there is a reaction in the stock market, there must
+               have been a covid spike within a max_gap interval.
+            5. Therefore IF (3) and (4), by matching the spikes up in a greedy way, the correlation
                coeficient, will be statistically signficant.
-
-        TODO reword 2 and 3
 
         Preconditions:
             - stock_stream in {'high', 'low', 'open', 'close'}
-            - stock in self._open
             - country in self._covid
-            - all(len(self._covid[x]) > 2 for x in self._covid) # TODO this needs to be redone
-            - all(len(self._high[x]) > 2 for x in self._high)   #  after the change to the new
-            - all(len(self._low[x]) > 2 for x in self._low)     #  format
-            - all(len(self._open[x]) > 2 for x in self._open)
-            - all(len(self._close[x]) > 2 for x in self._close)
-            - len(matching_spikes(self._high[stock], self._covid[country], threshold)[0]) > 2
+            - stock in self._stocks[stock_stream]
+            - max_gap >= 0
 
-        >>> # TODO
+        >>> # TODO maybe?
         """
         if max_gap is None:
             max_gap = 0
