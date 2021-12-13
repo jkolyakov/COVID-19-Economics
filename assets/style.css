@@ -1,8 +1,8 @@
 /* CSS file for the CSC110 final project.
-   This file is Copyright (C) 2021, Theodore Preduta. */
+   This file is Copyright (C) 2021, Theodore Preduta and Jacob Kolyakov. */
 
 body {
-    font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: sans-serif;
     font-weight: 400;
 }
 
