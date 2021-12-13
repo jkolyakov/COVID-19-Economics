@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 
 from data_management import DataManager
-from config import LONG_NAMES, STYLE_URL
+from config import LONG_NAMES
 
 
 class UserInterface:
@@ -34,10 +34,7 @@ class UserInterface:
         self._source = data_source
         self._global_trend_cache = {}
 
-        self._app = dash.Dash(
-            __name__,
-            external_stylesheets=[STYLE_URL]
-        )
+        self._app = dash.Dash(__name__)
 
         # setup the app layout
         self._app.layout = html.Div(className='content', children=[

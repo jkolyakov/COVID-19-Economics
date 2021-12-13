@@ -1,0 +1,57 @@
+/* CSS file for the CSC110 final project.
+   This file is Copyright (C) 2021, Theodore Preduta. */
+
+body {
+    font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 400;
+}
+
+div.content {
+    max-width: 70em;
+    margin: 0 auto;
+    background-color: #fff;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 0;
+}
+
+h4 {
+    border-bottom: 2px solid #444;
+    margin-bottom: 0.7em;
+    padding-bottom: 0.2em;
+    display: block;
+}
+
+hr {
+    border-top: 2px solid #444;
+}
+
+label {
+    display: block;
+}
+
+div.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    margin: 0 auto;
+}
+
+div.control {
+    width: 30%;
+    margin: 1em;
+    margin-top: 0 !important;
+}
+
+div.large-control {
+    width: 95%;
+    margin: 1em;
+    margin-top: 0 !important;
+}
+
+p.copyright-text {
+    text-align: center;
+    color: gray;
+}
