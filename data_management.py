@@ -52,6 +52,7 @@ class DataManager:
         Preconditions:
             - sources != set()
             - start < end
+            - all('covid-' in s or 'stock-' in s for s in sources)
         """
         self._duration = (end - start).days + 1
 
@@ -74,7 +75,7 @@ class DataManager:
 
                 # Invariants
                 assert len(self._covid[name]) == self._duration
-            elif 'stock-' in source:
+            else:
                 dates, *data = parse_stock_data_file(source, start - datetime.timedelta(days=1),
                                                      end)
 
@@ -93,8 +94,6 @@ class DataManager:
                 assert len(self._stocks['high'][name]) == self._duration
                 assert len(self._stocks['low'][name]) == self._duration
                 assert len(self._stocks['close'][name]) == self._duration
-            else:
-                raise AssertionError('Invalid data type.')
 
     def get_global_statistics(self, stock_stream: str, days: int, stock: str,
                               country: str) -> list[float]:
