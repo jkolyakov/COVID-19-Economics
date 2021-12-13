@@ -22,8 +22,23 @@ class UserInterface:
     """Class that holds all the state necessary to display the statistical data
     visually and interactively.
 
+    Representation Invariants:
+        - self._source is not None
+        - self._app is not None
+        - self._global_trend_cache is not None
+        - self._local_trend_cache is not None
+
     TODO Sample class setup
     """
+    # Private Instance Attributes:
+    #     - _app: The dash web application that will display the data and handle coordinating
+    #             update requests.
+    #     - _source: The backend source of data to be displayed.  The _source provides an interface
+    #                for the graph data.
+    #     - _global_trend_cache: A mapping from a unique id of a set of graphed data to the data
+    #                            itself.  This allows us to skip noticeably slower calculations.
+    #     - _local_trend_cache: A mapping from a unique id of a graphed datapoint to the data
+    #                           itself.  This allows us to skip noticeably slower calculations.
     _app: dash.Dash
     _source: DataManager
     _global_trend_cache: dict[str, list[float]]
@@ -34,6 +49,9 @@ class UserInterface:
 
         Preconditions:
             - data_source is not None
+            - countries != set()
+            - all(len(s) == 3 for s in countries)
+            - stocks != set()
 
         TODO doctests?
         """
@@ -44,6 +62,7 @@ class UserInterface:
         self._app = dash.Dash(__name__)
 
         # setup the app layout
+        # TODO ugly repeated code
         self._app.layout = html.Div(className='content', children=[
             html.H1('Global Trends'),
             dcc.Graph(id='global-graph'),
@@ -95,7 +114,8 @@ class UserInterface:
                             10: '10',
                             20: '20',
                             30: '30'
-                        }
+                        },
+                        value=0
                     )
                 ]),
                 html.Div(className='control', children=[

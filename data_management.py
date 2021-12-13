@@ -19,9 +19,26 @@ class DataManager:
     TODO: Check if this is OK
     TODO: do doctests make any sense in this file?
 
+    Representation Invariants:
+        - len(self._stocks) == 4
+        - all(s in self._stocks for s in {'open', 'close', 'high', 'low'})
+        - self._start < self._end
+        - self._duration > 0
+
     >>> usa_and_snp = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
                                   datetime.date(2021, 1, 1), datetime.date(2021, 1, 10))
     """
+    # Private Instance Attributes:
+    #     - _covid: A mapping from a country code the the new covid cases reported at that day.
+    #               The index in the list represents the number of days since _start.
+    #     - _stocks: A mapping from a stock stream (open/high/low/close), to a mapping from the
+    #                stock code to a list of the price change from yesterday.  By using a mapping
+    #                instead of a dataclass we can achieve a more dynamic behaviour avoiding a
+    #                large if statement block.
+    #     - _start: The start date of the time period being analyzed.
+    #     - _end: The end date of the time period being analyzed.  Note that this date is included
+    #             in the time range.
+    #     - _duration: The length (in days) of the period being analyzed.
     _covid: dict[str, list[int]]
     _stocks: dict[str, dict[str, list[float]]]
     _start: datetime.date
