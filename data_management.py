@@ -10,7 +10,7 @@ import datetime
 
 from parse_data import parse_covid_data_file, parse_stock_data_file
 from process_data import fill_covid_data, fill_stock_data, differentiate_stock_data, \
-    find_correlation_coefficient, matching_spikes
+    find_correlation_coefficient, find_matching_spikes
 
 
 class DataManager:
@@ -149,11 +149,9 @@ class DataManager:
 
         >>> # TODO maybe?
         """
-        if max_gap is None:
-            max_gap = 0
-        data = matching_spikes(self._stocks[stock_stream][stock],
-                               self._covid[country], stock, country, max_gap)
-        return find_correlation_coefficient(data[0], data[1])
+        stock_spikes, covid_spikes = find_matching_spikes(self._stocks[stock_stream][stock],
+                                                          self._covid[country], max_gap)
+        return find_correlation_coefficient(covid_spikes, stock_spikes)
 
 
 if __name__ == '__main__':
