@@ -8,6 +8,7 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
+from plotly.graph_objs import Figure
 
 from data_management import DataManager
 from config import LONG_NAMES
@@ -151,7 +152,7 @@ class UserInterface:
         self._app.run_server(debug=True)
 
     def _update_global_weekly_trends(self, stream: str,
-                                     countries: list[str], stocks: list[str]):
+                                     countries: list[str], stocks: list[str]) -> Figure:
         """Create the plotly graph for the global trends graph. TODO better description
 
         TODO cache :) (this is where the fun starts)
@@ -175,7 +176,7 @@ class UserInterface:
         return px.line(data)  # TODO name the axis
 
     def _update_local_weekly_trends(self, stream: str, countries: list[str], stocks: list[str],
-                                    max_days: int):
+                                    max_days: int) -> Figure:
         """Create the plotly for the local trends graph. TODO better description
 
         TODO cache :) (this is where the fun starts)
@@ -199,7 +200,7 @@ class UserInterface:
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': ['dash', 'dash.dependencies', 'plotly.express',
+        'extra-imports': ['dash', 'dash.dependencies', 'plotly.express', 'plotly.graph_objs',
                           'data_management', 'config'],
         'allowed-io': [],
         'max-line-length': 100,
