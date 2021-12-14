@@ -14,13 +14,10 @@ from user_interface import UserInterface
 from config import DATA_FILES, START_DATE, END_DATE
 
 if __name__ == '__main__':
-    import python_ta.contracts
-    python_ta.contracts.check_all_contracts()  # TODO delete before submisision
-
     manager = DataManager(
         sources=DATA_FILES,
         start=START_DATE,
         end=END_DATE
     )
     gui = UserInterface(manager)
-    gui.run(debug=True)  # TODO turn debug off before submission
+    gui.run()
