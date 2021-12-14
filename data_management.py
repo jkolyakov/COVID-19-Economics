@@ -67,7 +67,7 @@ class DataManager:
         self._end = end
 
         for source in sources:
-            name = source[11:-4]  # TODO un-hardcode this number
+            name = source[11:-4]
 
             if 'covid-' in source:
                 dates, data = parse_covid_data_file(source, start, end)
@@ -112,7 +112,12 @@ class DataManager:
             - stock in self._stocks[stock_stream]
             - country in self._covid
 
-        >>> # TODO maybe?
+        >>> import math
+        >>> dm = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                         datetime.date(2020, 1, 1), datetime.date(2021, 1, 1))
+        >>> c = dm.get_global_statistics('open', 10, 'snp500', 'usa')[0]
+        >>> math.isclose(0.061052947594341433, c)
+        True
         """
         initial_corr = find_correlation_coefficient(self._covid[country],
                                                     self._stocks[stock_stream][stock])
@@ -147,7 +152,12 @@ class DataManager:
             - stock in self._stocks[stock_stream]
             - max_gap >= 0
 
-        >>> # TODO maybe?
+        >>> import math
+        >>> dm = DataManager({'data/stock-snp500.csv', 'data/covid-usa.csv'}, \
+                         datetime.date(2020, 1, 1), datetime.date(2021, 1, 1))
+        >>> c = dm.get_local_statistics('open', 'snp500', 'usa', 5)
+        >>> math.isclose(0.04975472647664612, c)
+        True
         """
         stock_spikes, covid_spikes = find_matching_spikes(self._stocks[stock_stream][stock],
                                                           self._covid[country], max_gap)
@@ -157,7 +167,7 @@ class DataManager:
 if __name__ == '__main__':
     import python_ta
     python_ta.check_all(config={
-        'extra-imports': ['datetime', 'pandas', 'parse_data', 'process_data'],
+        'extra-imports': ['datetime', 'parse_data', 'process_data'],
         'allowed-io': [],
         'max-line-length': 100,
         'disable': ['R1705', 'C0200']

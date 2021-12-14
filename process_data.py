@@ -231,7 +231,8 @@ def find_correlation_coefficient(covid: list[float], stock: list[float]) -> floa
 
     # If there is not enough data to calculate a correlation coefficient, for our purposes it
     # suffices that we can say there is 0 correlation.  This avoids complexity in the caller.
-    if correlation.empty or correlation['covid']['stocks'] >= 1.0:
+    if correlation.empty or correlation['covid']['stocks'] >= 1.0 or \
+            pd.isna(correlation['covid']['stocks']):
         return 0.0
     else:
         return correlation['covid']['stocks']
@@ -239,6 +240,7 @@ def find_correlation_coefficient(covid: list[float], stock: list[float]) -> floa
 
 if __name__ == '__main__':
     import python_ta
+
     python_ta.check_all(config={
         'extra-imports': ['datetime', 'pandas'],
         'allowed-io': [],
@@ -247,7 +249,9 @@ if __name__ == '__main__':
     })
 
     import python_ta.contracts
+
     python_ta.contracts.check_all_contracts()
 
     import doctest
+
     doctest.testmod()
