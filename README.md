@@ -8,7 +8,7 @@ This poses the question:
 To answer this question, two separate analyses were done on an appropriate dataset, each with their own underlying assumptions.
 We have dubbed the two analyses 'global' and 'local'.
 
-**Note:** for usage instructions and a more complete description of this project (+ references) [see](project_report.pdf).
+**Note:** for usage instructions and a more complete description of this project (+ references) see [project_report.pdf](project_report.pdf).
 
 ## Global Trends
 
